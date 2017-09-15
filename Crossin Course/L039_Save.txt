@@ -1,0 +1,4 @@
+name	totalGame	totalRound	totalWin	avageWinRound
+Dorian	8	16	1	5.000000
+Wang	1	7	1	7.000000
+HU	2	7	1	6.000000
