@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # Dorian Wang 2017.09.07~2017.09.11
 # Auto Click QiDian
+# add to GitHub
 
 import pyautogui
 import time
