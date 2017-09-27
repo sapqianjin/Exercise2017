@@ -7,6 +7,7 @@
 import pyautogui
 import time
 
+bufferSecond = 10
 pyautogui.PAUSE = 0.1
 pyautogui.FAILSAFE = True
 width, height = pyautogui.size()
@@ -67,7 +68,7 @@ for i, (posX, waitingMinutes) in enumerate(((925, 5), (1085, 10), (1245, 20), (1
             activeChrome = False
 
         # waiting until next round
-        pyautogui.time.sleep(waitingMinutes * 60 + 10)
+        pyautogui.time.sleep(waitingMinutes * 60 + bufferSecond)
     else:
         continue
 
