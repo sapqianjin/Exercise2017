@@ -2,88 +2,103 @@
 # -*- coding: utf-8 -*-
 # Dorian Wang 2017.09.27
 # Use MM02 to change the safety stock in SAP
+# Create for Client_F, because they cannot get authorization for MM17/LSMW/SCAT
 # Test OK. Add to GitHub
 
 import pyautogui
 import time, codecs
 
-# Some SAP system need waiting feedback from server
-# So we can set small pause time for some local steps, but we need
-# buffer time for these steps need feedback from server.
+# Some SAP system need waiting feedback from server.
+# So we can set small pause time for some local steps,
+# but for these steps need return information from server,
+# we need set buffer time, I prefer 1 second (at least 0.5 second).
 pyautogui.PAUSE = 0.1
 pyautogui.FAILSAFE = True
 bufferSecond = 1
 
 # Before start this program, the SAP GUI window must be open first,
-# SAP GUI use the Corbu Theme, the color will be used in program logic
 # The t-code MM02 should be started, and set default in view/org
-# If you run it in your computer, the position should be adjust.
+# SAP GUI use the Corbu Theme, the color will be used in program logic
+# If you run it in your computer, the position/color maybe need adjust.
 # You can use pyautogui.position() get the position value.
-# SAP Screen SAPLMGMM 0060
-posX_Material = 430
-posY_Material = 330
-# SAP Screen SAPLMGD1 2486
-posX_SafetyStock = 512
-posY_SafetyStock = 980
+# SAP Program SAPLMGMM Screen 0060
+posX_materialNumber = 430
+posY_materialNumber = 330
+# SAP Program SAPLMGMM Screen 0070
+posX_viewWindow = 900
+posY_viewWindow = 365
+color_viewWindow = (81, 81, 81)
+# SAP Program SAPLMGMM Screen 0080
+posX_orgWindow = 900
+posY_orgWindow = 325
+color_orgWindow = (81, 81, 81)
+# SAP Program SAPLMGD1 Screen2486
+posX_safetyStock = 512
+posY_safetyStock = 980
+posX_saveActive = 565
+posY_saveActive = 100
+color_saveActive = (158, 189, 217)
 
-# Goto SAP MM02 window
+# Switch to SAP MM02 window
 pyautogui.hotkey('alt', 'tab')
 pyautogui.time.sleep(bufferSecond)
+# Log start time
 print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
 
 try:
     with codecs.open("MM02_SS.txt", "r", encoding="utf-8") as f:
         for line in f.readlines():
-            material,  safetyStock = line.split()
-            print("Material:", material, "Safety Stock:", safetyStock)
-            # Click field of material, then del exist data, and send material number
-            pyautogui.click(posX_Material, posY_Material)
+            materialNumber, safetyStock = line.split()
+            print("Material:", materialNumber, "Safety Stock:", safetyStock)
+            # Click field of material, del exist data, then send material number
+            pyautogui.click(posX_materialNumber, posY_materialNumber)
             pyautogui.hotkey('ctrl', 'a')
             pyautogui.hotkey('del')
-            pyautogui.typewrite(material)
+            pyautogui.typewrite(materialNumber)
             pyautogui.hotkey('enter')
             pyautogui.time.sleep(bufferSecond)
 
             # Check the view window is active or not
             # Recommend set "selection only on request" to skip it
-            if pyautogui.pixelMatchesColor(900, 365, (81,81,81)):
+            if pyautogui.pixelMatchesColor(posX_viewWindow, posY_viewWindow, color_viewWindow):
                 # Click enter if the view selection window active
                 pyautogui.hotkey('enter')
                 pyautogui.time.sleep(bufferSecond)
 
             # Check the organize window is active or not
             # Recommend set "selection only on request" to skip it
-            if pyautogui.pixelMatchesColor(900, 325, (81,81,81)):
+            if pyautogui.pixelMatchesColor(posX_orgWindow, posY_orgWindow, color_orgWindow):
                 # Click enter if organize window active
                 pyautogui.hotkey('enter')
                 pyautogui.time.sleep(bufferSecond)
 
-            # Click field of Safety Stock, then send the quantity
-            pyautogui.click(posX_SafetyStock, posY_SafetyStock)
+            # Click field of Safety Stock, del exist data, then send the quantity from text file
+            pyautogui.click(posX_safetyStock, posY_safetyStock)
             pyautogui.hotkey('ctrl', 'a')
             pyautogui.hotkey('del')
             pyautogui.typewrite(safetyStock)
             pyautogui.hotkey('ctrl', 's')
             pyautogui.time.sleep(bufferSecond)
 
-            # Check the save button is still active, sometime warning message
-            if pyautogui.pixelMatchesColor(565,100, (158, 189, 217)):
+            # Check the save button is still active or not, sometime warning message will pause save action
+            if pyautogui.pixelMatchesColor(posX_saveActive, posY_saveActive, color_saveActive):
                 # Click enter to skip the warning message
                 pyautogui.hotkey('enter')
                 pyautogui.time.sleep(bufferSecond)
             else:
                 continue
 
-
     print('Done.')
+    # Log end time
     print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
 
 except KeyboardInterrupt:
     print('User Break.')
 
+# Switch back to Python window, so user could know the program is finished.
 pyautogui.hotkey('alt', 'tab')
 
-# 0.5 second is accept in CY test, for each material, avg time 5~7s
+# 0.5 second is accept in Client_C test, for each material, avg time 5~7s
 # test 100 material: 2017-09-27 19:44:55 ~ 2017-09-27 19:55:09
 # So the efficiency is very low, but # 0.25 is not accept,
 # because program will place safety stock in material description field.
