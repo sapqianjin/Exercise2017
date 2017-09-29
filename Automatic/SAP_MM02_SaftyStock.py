@@ -15,7 +15,7 @@ import time, codecs
 # The buffer time must be adjusted based on the network!
 pyautogui.PAUSE = 0.1
 pyautogui.FAILSAFE = True
-bufferSecond = 1
+bufferSecond = 1.5
 
 # Before start this program, the SAP GUI window must be open first,
 # The t-code MM02 should be started, and set default in view/org
@@ -121,3 +121,16 @@ pyautogui.hotkey('alt', 'tab')
 # 2017-09-27 20:53:07 ~ 2017-09-27 20:55:48
 # average: each material 3.2 s
 # not exist error.
+
+# Pause 0.1 second, buffer 1.5 Second
+# test 50 material with view, org:
+# 2017-09-28 15:00:41 ~ 2017-09-28 15:06:46
+# average: each material 7.3 s
+# not exist error.
+
+# Pause 0.1 second, buffer 1.5 Second
+# test 50 material without view, org:
+# 2017-09-28 15:08:15 ~ 2017-09-28 15:11:40
+# average: each material 3.5 s
+# not exist error.
+
