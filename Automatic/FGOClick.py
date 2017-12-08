@@ -33,6 +33,17 @@ def repeatClick1(position, repeatTime=1):
     return ()
 
 
+def unlimitedOne(totalGift = 300):
+    # 无限池抽奖
+    # 至少需要点击totalGift/10*4次
+    # 重复次数取决于网络信号，通常加10%。
+    clickNumber = int(round(totalGift/10 * 4.1, 0))
+    # 每次点击大约2秒钟左右
+    print("Need around",int(round(clickNumber* 2 / 60, 60)), "Minutes.")
+    repeatClick1((1000, 800), clickNumber)
+    return ()
+
+
 def bufferConfirm(target=0):
     # confirm buffer
     pyautogui.click(1500, 800)
@@ -64,6 +75,7 @@ def chooseEnemy(target=3):
 
 def servantSkill(servant, skill, target=0):
     # 从者技能(buff)释放
+    # 需要指定目标则输入target参数
     try:
         # choose buffer
         if servant == 1:
@@ -96,6 +108,7 @@ def servantSkill(servant, skill, target=0):
 
 def masterSkill(skill, target=0):
     # 御主技能释放
+    # 需要指定目标则输入target参数
     try:
         # open skill
         pyautogui.click(2050, 650)
@@ -142,7 +155,7 @@ def attack(cards):
     return ()
 
 
-def summonByFriendPoints(repeatTime=20):
+def friendPointSummon(repeatTime=20):
     # 友情点召唤
     try:
         for i in range(0, repeatTime):
@@ -200,12 +213,13 @@ pyautogui.time.sleep(bufferSecond)
 print(time.strftime("%Y-%m-%d %H:%M:%S\n", time.localtime()))
 
 # 友情点召唤
-# summonByFriendPoints(25)
+friendPointSummon(1)
 
-# 尼禄祭无限池抽奖，
-# 至少需要点击600/20*4=120次
-# 重复次数取决于网络信号，使用130-150，大约4-5分钟。
-# repeatClick1((1000, 800), 80)
+# 圣诞节无限池抽奖，每池500礼物
+# unlimitedOne(500)
+
+# 尼禄祭无限池抽奖，每池300礼物
+# unlimitedOne(300)
 
 # 尼禄祭花瓣池第一回合
 # NeroFestAutumnExpertFirstRound()
