@@ -14,7 +14,7 @@ WAITING_SECOND = 1
 pyautogui.PAUSE = 1
 pyautogui.FAILSAFE = True
 width, height = pyautogui.size()
-# Default position of ApowerMirror FGO window
+# Default position and color of ApowerMirror FGO window
 X = 140
 Y = 150
 # Position of Enemy
@@ -32,31 +32,51 @@ POS_BUFFER_TARGETS = ((), (X + 710, Y + 700), (X + 1090, Y + 700), (X + 1560, Y 
 POS_ATTACK_BUTTON = (X + 1860, Y + 850)
 # POS_ATTACK_CARDS = ((), (X + 410, Y + 850), (X + 760, Y + 850), (X + 1160, Y + 850), (X + 1510, Y + 850), (X + 1860, Y + 850), (X + 810, Y + 350), (X + 1160, Y + 350), (X + 1460, Y + 350))
 POS_ATTACK_CARDS = ((), (440, 900), (815, 900), (1175, 900), (1545, 900), (1920, 900), (1020, 650), (1355, 650), (1635, 650))
-POS_ATTACK_END_BUTTON = (X + 1460, Y + 950)
+POS_BATTLE_BEGIN_BUTTON = (X + 1860, Y + 1050)
+POS_BATTLE_END = (2000, 950)
+POS_BATTLE_END_BUTTON = (X + 1860, Y + 1050)
 # Position of Other Button
 POS_UNLIMITED_LINEUP_BUTTON = (X + 860, Y + 650)
-POS_SUMMON_END_BUTTON = (X + 1360, Y + 1025)
+POS_UNLIMITED_LINEUP_RESET = (X + 860, Y + 650)
 POS_SUMMON_TEN_BUTTON = (X + 1335, Y + 900)
+POS_SUMMON_END_BUTTON = (X + 1360, Y + 1025)
 # Color of fix_attack_one_turn cards
 COLOR_ATTACK_BUTTON = (0, 234, 247)
-COLOR_ATTACK_RED = [(153, 25, 24), (152, 24, 22), (154, 24, 23)]
-COLOR_ATTACK_BLUE = [(22, 64, 147), (21, 64, 148), (21, 65, 151), (22, 66, 150), (23, 65, 151), (22, 63, 153)]
-COLOR_ATTACK_GREEN = ((30, 110, 12))
+# Red Attack  Cards: (153, 25, 24), (152, 24, 22), (154, 24, 23)
+COLOR_ATTACK_RED = ()
+# Blue Attack  Cards: (22, 64, 147), (21, 64, 148), (21, 65, 151), (22, 66, 150), (23, 65, 151), (22, 63, 153)
+COLOR_ATTACK_BLUE = ()
+# Green Attack Cards: (30, 110, 12)
+COLOR_ATTACK_GREEN = ()
+COLOR_BATTLE_BEGIN_BUTTON = (182, 187, 191)
+COLOR_BATTLE_END = (3, 10, 15)
 COLOR_UNLIMITED_LINEUP_BUTTON = ()
 COLOR_UNLIMITED_LINEUP_RESET = ()
 
 
-def repeat_click1(position, repeat_time=1):
+def same_color(position, color):
+    # 按钮颜色难以完全一致，所以定义RGB色差在10以内均为OK
+    color_postion = pyautogui.screenshot().getpixel(position)
+    color_different = 0
+    for i in range(0, 3):
+        color_different = color_postion[i] - color[i]
+    if color_different < 10:
+        return (True)
+    else:
+        return (False)
+
+
+def repeat_click1(position, repeat=1, waiting_time=WAITING_SECOND):
     # 单个位置重复点击
     try:
         pos_x = position[0]
         pos_y = position[1]
-        for i in range(0, repeat_time):
+        for i in range(0, repeat):
             # 发现模拟器窗口无法点击，也无法按键切换回去
             # 只能使用Apower Mirror，测试OK
             pyautogui.click(pos_x, pos_y)
             print(i, time.strftime("%H:%M:%S", time.localtime()))
-            pyautogui.time.sleep(WAITING_SECOND)
+            pyautogui.time.sleep(waiting_time)
         print('Done.')
         # Log end time
         print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
@@ -69,10 +89,25 @@ def unlimited_lineup(gifts_qty=300):
     # 无限池抽奖
     # 至少需要点击gifts_qty/10*4次
     # 重复次数取决于网络信号，通常加10%。
-    gifts_round = int(round(gifts_qty / 10 * 4.1, 0))
+    click_round = int(round(gifts_qty / 10 * 4.1, 0))
     # 每次点击大约2秒钟左右 (WAITING_SECOND + pyautogui.PAUSE)
-    print("Need around", int(round(gifts_round * (WAITING_SECOND + pyautogui.PAUSE) / 60, 60)), "Minutes.")
-    repeat_click1(POS_UNLIMITED_LINEUP_BUTTON, gifts_round)
+    print("Need around", int(round(click_round * (WAITING_SECOND + pyautogui.PAUSE) / 60, 60)), "Minutes.")
+    repeat_click1(POS_UNLIMITED_LINEUP_BUTTON, click_round)
+    return ()
+
+
+def auto_unlimited_lineup(gifts_qty=300):
+    # 无限池抽奖，自动重置
+    # 通过检查重置按钮颜色，判断是否需要重置。
+    # 但无法考虑额外的10%点击次数
+    gifts_round = int(gifts_qty / 10)
+    # 每次点击大约2秒钟左右 (WAITING_SECOND + pyautogui.PAUSE)
+    print("Need around", int(round(gifts_round * 4 * (WAITING_SECOND + pyautogui.PAUSE) / 60, 60)), "Minutes.")
+    for i in range(0, gifts_round):
+        if same_color(POS_UNLIMITED_LINEUP_RESET, COLOR_UNLIMITED_LINEUP_RESET):
+            pyautogui.click(POS_UNLIMITED_LINEUP_RESET)
+            pyautogui.time.sleep(WAITING_SECOND)
+        repeat_click1(POS_UNLIMITED_LINEUP_BUTTON, 4)
     return ()
 
 
@@ -149,7 +184,7 @@ def fix_attack_one_turn(cards):
     return ()
 
 
-def auto_attack_one_turn(max_card=5):
+def auto_attack_one_turn(max_card=5, max_red=3, max_blue=3, max_green=3):
     # 自动战斗，按照红-蓝-绿颜色优先次序
     try:
         # open attack screen
@@ -168,11 +203,11 @@ def auto_attack_one_turn(max_card=5):
                 blue_cards.append(card)
             else:
                 red_cards.append(card)
-        if len(red_cards) > 2:
+        if len(red_cards) >= max_red:
             choose_attack_cards(red_cards[0:3])
-        elif len(blue_cards) > 3:
+        elif len(blue_cards) >= max_blue:
             choose_attack_cards(blue_cards[0:3])
-        elif len(green_cards) > 3:
+        elif len(green_cards) >= max_green:
             choose_attack_cards(green_cards[0:3])
         else:
             # print(red_cards)
@@ -234,7 +269,7 @@ def nero_fest_autumn_expert_last_turn(target=1):
     # 默认按照孔明、贞德Alter、兰斯洛特依次使用宝具卡
     fix_attack_one_turn((8, 7, 6))
     pyautogui.time.sleep(30)
-    repeat_click1(POS_ATTACK_END_BUTTON, 5)
+    repeat_click1(POS_BATTLE_END_BUTTON, 5)
     return ()
 
 
@@ -247,17 +282,39 @@ def common_last_turn(target=1):
     # 默认按照孔明、贞德Alter、阿蒂拉依次使用宝具卡
     fix_attack_one_turn((8, 7, 6))
     pyautogui.time.sleep(30)
-    repeat_click1(POS_ATTACK_END_BUTTON, 5)
+    repeat_click1(POS_BATTLE_END_BUTTON, 5)
     return ()
 
 
-def auto_battle(turns=3):
-    for i in range(0, turns):
-        auto_attack_one_turn(max_card=5)
+def auto_battle(max_turns=3):
+    for i in range(0, max_turns):
+        print("turn:", i + 1)
+        auto_attack_one_turn(max_card=5, max_red=3, max_blue=4, max_green=4)
         pyautogui.time.sleep(20)
         # normal 15~20 second is ok, but if enemy NP, or servant died, need longer time
-        while not(pyautogui.pixelMatchesColor(POS_ATTACK_BUTTON[0],POS_ATTACK_BUTTON[1],COLOR_ATTACK_BUTTON)):
+        # 只用颜色判断条件很容易死循环，改成按照次数，等待时间最多延长3次
+        wait = 3
+        new_attack_active = same_color(POS_ATTACK_BUTTON, COLOR_ATTACK_BUTTON)
+        battle_end_active = same_color(POS_BATTLE_END, COLOR_BATTLE_END)
+        while not (new_attack_active) and not (battle_end_active) and (wait > 0):
             pyautogui.time.sleep(10)
+            print("  wait:", wait)
+            wait = wait - 1
+            new_attack_active = same_color(POS_ATTACK_BUTTON, COLOR_ATTACK_BUTTON)
+            battle_end_active = same_color(POS_BATTLE_END, COLOR_BATTLE_END)
+            print()
+        # 判断是否完毕
+        if battle_end_active:
+            break
+    return ()
+
+
+def christmas_2016_10ap():
+    if same_color(POS_BATTLE_BEGIN_BUTTON, COLOR_BATTLE_BEGIN_BUTTON):
+        pyautogui.click(POS_BATTLE_BEGIN_BUTTON)
+        pyautogui.time.sleep(25)
+    auto_battle(max_turns=12)
+    repeat_click1(POS_BATTLE_END_BUTTON, 3, 2)
     return ()
 
 
@@ -273,22 +330,16 @@ print(time.strftime("%Y-%m-%d %H:%M:%S\n", time.localtime()))
 
 # 圣诞节活动
 # 圣诞节无限池抽奖，每池500礼物
-# unlimited_lineup(gifts_qty=500)
+# auto_unlimited_lineup(gifts_qty=70)
 
+# 圣诞2016复刻
+christmas_2016_10ap()
 
 # 通用无脑进攻
-auto_battle(turns=5)
+# auto_battle(max_turns=6)
 
 # 通用最后一回合，
 # common_last_turn()
-
-# want to use win32, but failed.
-# pyautogui.moveTo(1370,775)
-# pyautogui.moveTo(2039,1074)
-# print(1)
-# windll.user32.SetCursorPos(2039,1074)
-# win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN|win32con.MOUSEEVENTF_LEFTUP, 0, 0)
-# print(2)
 
 # 尼禄祭活动
 # 尼禄祭无限池抽奖，每池300礼物
