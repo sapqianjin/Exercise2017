@@ -36,8 +36,9 @@ POS_BATTLE_BEGIN_BUTTON = (X + 1860, Y + 1050)
 POS_BATTLE_END = (2000, 950)
 POS_BATTLE_END_BUTTON = (X + 1860, Y + 1050)
 # Position of Other Button
-POS_UNLIMITED_LINEUP_BUTTON = (X + 860, Y + 650)
-POS_UNLIMITED_LINEUP_RESET = (X + 860, Y + 650)
+POS_UNLIMITED_LINEUP_BUTTON = (X + 960, Y + 650)
+POS_UNLIMITED_LINEUP_RESET = (X + 1760, Y + 325)
+POS_UNLIMITED_LINEUP_RESET_CONFIRM = (X + 1260, Y + 850)
 POS_SUMMON_TEN_BUTTON = (X + 1335, Y + 900)
 POS_SUMMON_END_BUTTON = (X + 1360, Y + 1025)
 # Color of fix_attack_one_turn cards
@@ -50,17 +51,17 @@ COLOR_ATTACK_BLUE = ()
 COLOR_ATTACK_GREEN = ()
 COLOR_BATTLE_BEGIN_BUTTON = (182, 187, 191)
 COLOR_BATTLE_END = (3, 10, 15)
-COLOR_UNLIMITED_LINEUP_BUTTON = ()
-COLOR_UNLIMITED_LINEUP_RESET = ()
+COLOR_UNLIMITED_LINEUP_BUTTON = (21, 202, 243)
+COLOR_UNLIMITED_LINEUP_RESET = (138, 175, 223)
 
 
 def same_color(position, color):
-    # 按钮颜色难以完全一致，所以定义RGB色差在10以内均为OK
+    # 按钮颜色难以完全一致，所以定义RGB色差之和在10以内均为OK
     color_postion = pyautogui.screenshot().getpixel(position)
     color_different = 0
     for i in range(0, 3):
-        color_different = color_postion[i] - color[i]
-    if color_different < 10:
+        color_different = color_different + (color_postion[i] - color[i])
+    if abs(color_different) < 10:
         return (True)
     else:
         return (False)
@@ -71,7 +72,7 @@ def repeat_click1(position, repeat=1, waiting_time=WAITING_SECOND):
     try:
         pos_x = position[0]
         pos_y = position[1]
-        for i in range(0, repeat):
+        for i in range(repeat, 0, -1):
             # 发现模拟器窗口无法点击，也无法按键切换回去
             # 只能使用Apower Mirror，测试OK
             pyautogui.click(pos_x, pos_y)
@@ -86,7 +87,7 @@ def repeat_click1(position, repeat=1, waiting_time=WAITING_SECOND):
 
 
 def unlimited_lineup(gifts_qty=300):
-    # 无限池抽奖
+    # 无限池抽奖，单纯点击
     # 至少需要点击gifts_qty/10*4次
     # 重复次数取决于网络信号，通常加10%。
     click_round = int(round(gifts_qty / 10 * 4.1, 0))
@@ -104,8 +105,12 @@ def auto_unlimited_lineup(gifts_qty=300):
     # 每次点击大约2秒钟左右 (WAITING_SECOND + pyautogui.PAUSE)
     print("Need around", int(round(gifts_round * 4 * (WAITING_SECOND + pyautogui.PAUSE) / 60, 60)), "Minutes.")
     for i in range(0, gifts_round):
-        if same_color(POS_UNLIMITED_LINEUP_RESET, COLOR_UNLIMITED_LINEUP_RESET):
+        if not (same_color(POS_UNLIMITED_LINEUP_BUTTON, COLOR_UNLIMITED_LINEUP_BUTTON)):
             pyautogui.click(POS_UNLIMITED_LINEUP_RESET)
+            pyautogui.time.sleep(WAITING_SECOND)
+            pyautogui.click(POS_UNLIMITED_LINEUP_RESET_CONFIRM)
+            pyautogui.time.sleep(WAITING_SECOND)
+            pyautogui.click(POS_UNLIMITED_LINEUP_RESET_CONFIRM)
             pyautogui.time.sleep(WAITING_SECOND)
         repeat_click1(POS_UNLIMITED_LINEUP_BUTTON, 4)
     return ()
@@ -292,11 +297,11 @@ def auto_battle(max_turns=3):
         auto_attack_one_turn(max_card=5, max_red=3, max_blue=4, max_green=4)
         pyautogui.time.sleep(20)
         # normal 15~20 second is ok, but if enemy NP, or servant died, need longer time
-        # 只用颜色判断条件很容易死循环，改成按照次数，等待时间最多延长3次
-        wait = 3
         new_attack_active = same_color(POS_ATTACK_BUTTON, COLOR_ATTACK_BUTTON)
         battle_end_active = same_color(POS_BATTLE_END, COLOR_BATTLE_END)
-        while not (new_attack_active) and not (battle_end_active) and (wait > 0):
+        # 只用颜色判断条件很容易死循环，加入循环次数判断，等待时间最多延长3次
+        wait = 3
+        while (not new_attack_active) and (not battle_end_active) and (wait > 0):
             pyautogui.time.sleep(10)
             print("  wait:", wait)
             wait = wait - 1
@@ -314,7 +319,7 @@ def christmas_2016_10ap():
         pyautogui.click(POS_BATTLE_BEGIN_BUTTON)
         pyautogui.time.sleep(25)
     auto_battle(max_turns=12)
-    repeat_click1(POS_BATTLE_END_BUTTON, 3, 2)
+    repeat_click1(POS_BATTLE_END_BUTTON, 3, 3)
     return ()
 
 
@@ -326,14 +331,14 @@ pyautogui.time.sleep(BUFFER_SECOND)
 print(time.strftime("%Y-%m-%d %H:%M:%S\n", time.localtime()))
 
 # 友情点召唤
-# friend_point_summon(cards_qty=20)
+# friend_point_summon(cards_qty=330)
 
 # 圣诞节活动
 # 圣诞节无限池抽奖，每池500礼物
-# auto_unlimited_lineup(gifts_qty=70)
+unlimited_lineup(gifts_qty=100)
 
 # 圣诞2016复刻
-christmas_2016_10ap()
+# christmas_2016_10ap()
 
 # 通用无脑进攻
 # auto_battle(max_turns=6)
