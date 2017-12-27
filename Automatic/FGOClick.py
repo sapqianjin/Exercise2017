@@ -30,8 +30,7 @@ POS_BUFFER_CONFIRM = (X + 1360, Y + 650)
 POS_BUFFER_TARGETS = ((), (X + 710, Y + 700), (X + 1090, Y + 700), (X + 1560, Y + 700))
 # Position of Attach Button and Cards
 POS_ATTACK_BUTTON = (X + 1860, Y + 850)
-POS_ATTACK_CARDS = ((), (X + 300, Y + 850), (X + 675, Y + 850), (X + 1035, Y + 850), (X + 1405, Y + 850), (X + 1780, Y + 850), (X + 880, Y + 500), (X + 1215, Y + 500), (X + 1495, Y + 500))
-# POS_ATTACK_CARDS = ((), (440, 900), (815, 900), (1175, 900), (1545, 900), (1920, 900), (1020, 650), (1355, 650), (1635, 650))
+POS_ATTACK_CARDS = ((), (X + 300, Y + 750), (X + 675, Y + 750), (X + 1035, Y + 750), (X + 1405, Y + 750), (X + 1780, Y + 750), (X + 880, Y + 500), (X + 1215, Y + 500), (X + 1495, Y + 500))
 POS_BATTLE_BEGIN_BUTTON = (X + 1860, Y + 1050)
 POS_BATTLE_END = (X + 1860, Y + 800)
 POS_BATTLE_END_BUTTON = (X + 1860, Y + 1050)
@@ -213,7 +212,7 @@ def auto_attack_one_turn(max_card=5, max_red=3, max_blue=3, max_green=3):
         elif len(green_cards) >= max_green:
             choose_attack_cards(green_cards[0:3])
         elif len(red_cards) == 2:
-            choose_attack_cards((red_cards[0:1] + blue_cards + green_cards)[0:2]+red_cards[1:2])
+            choose_attack_cards((red_cards[0:1] + blue_cards + green_cards)[0:2] + red_cards[1:2])
         else:
             # print(red_cards)
             # print(blue_cards)
@@ -323,6 +322,14 @@ def christmas_2016_10ap():
     return ()
 
 
+def christmas_2016_20ap():
+    if same_color(POS_BATTLE_BEGIN_BUTTON, COLOR_BATTLE_BEGIN_BUTTON):
+        pyautogui.click(POS_BATTLE_BEGIN_BUTTON)
+        pyautogui.time.sleep(25)
+    auto_battle(max_turns=5, max_red=3, max_blue=3, max_green=4)
+    return ()
+
+
 # Main Program
 # Switch to FGO window
 pyautogui.hotkey('alt', 'tab')
@@ -338,10 +345,11 @@ print(time.strftime("%Y-%m-%d %H:%M:%S\n", time.localtime()))
 # unlimited_lineup(gifts_qty=100)
 
 # 圣诞2016复刻
-christmas_2016_10ap()
+# christmas_2016_10ap()
+christmas_2016_20ap()
 
 # 通用无脑进攻
-# auto_battle(max_turns=6)
+# auto_battle(max_turns=6, max_red=3, max_blue=3, max_green=3)
 
 # 通用最后一回合，
 # common_last_turn()
