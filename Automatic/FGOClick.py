@@ -15,31 +15,33 @@ pyautogui.PAUSE = 1
 pyautogui.FAILSAFE = True
 width, height = pyautogui.size()
 # Default position and color of ApowerMirror FGO window
-X = 140
-Y = 150
+X = 0
+Y = 0
+X_default = 240
+Y_default = 154
 # Position of Enemy
-POS_ENEMY = ((), (X + 280, Y + 100), (X + 610, Y + 100), (X + 960, Y + 100))
+POS_ENEMY = ((), (X + 420, Y + 250), (X + 750, Y + 250), (X + 1100, Y + 250))
 # Position of Buffers button
 POS_SERVANT_SKILLS = ((),
-                      ((), (X + 310, Y + 880), (X + 450, Y + 880), (X + 580, Y + 880)),
-                      ((), (X + 760, Y + 880), (X + 910, Y + 880), (X + 1010, Y + 880)),
-                      ((), (X + 1210, Y + 880), (X + 1360, Y + 880), (X + 1510, Y + 880)))
-POS_MASTER_SKILL_BUTTON = (X + 1910, Y + 500)
-POS_MASTER_SKILLS = ((), (X + 1510, Y + 500), (X + 1635, Y + 500), (X + 1760, Y + 500))
-POS_BUFFER_CONFIRM = (X + 1360, Y + 650)
-POS_BUFFER_TARGETS = ((), (X + 710, Y + 700), (X + 1090, Y + 700), (X + 1560, Y + 700))
+                      ((), (X + 450, Y + 1030), (X + 590, Y + 1030), (X + 720, Y + 1030)),
+                      ((), (X + 900, Y + 1030), (X + 1050, Y + 1030), (X + 1150, Y + 1030)),
+                      ((), (X + 1350, Y + 1030), (X + 1500, Y + 1030), (X + 1650, Y + 1030)))
+POS_MASTER_SKILL_BUTTON = (X + 2050, Y + 650)
+POS_MASTER_SKILLS = ((), (X + 1650, Y + 650), (X + 1775, Y + 650), (X + 1900, Y + 650))
+POS_BUFFER_CONFIRM = (X + 1500, Y + 800)
+POS_BUFFER_TARGETS = ((), (X + 850, Y + 850), (X + 1230, Y + 850), (X + 1700, Y + 850))
 # Position of Attach Button and Cards
-POS_ATTACK_BUTTON = (X + 1860, Y + 850)
-POS_ATTACK_CARDS = ((), (X + 300, Y + 750), (X + 675, Y + 750), (X + 1035, Y + 750), (X + 1405, Y + 750), (X + 1780, Y + 750), (X + 880, Y + 500), (X + 1215, Y + 500), (X + 1495, Y + 500))
-POS_BATTLE_BEGIN_BUTTON = (X + 1860, Y + 1050)
-POS_BATTLE_END = (X + 1860, Y + 800)
-POS_BATTLE_END_BUTTON = (X + 1860, Y + 1050)
+POS_ATTACK_BUTTON = (X + 2000, Y + 1000)
+POS_ATTACK_CARDS = ((), (X + 440, Y + 900), (X + 815, Y + 900), (X + 1175, Y + 900), (X + 1545, Y + 900), (X + 1920, Y + 900), (X + 1020, Y + 650), (X + 1355, Y + 650), (X + 1635, Y + 650))
+POS_BATTLE_BEGIN_BUTTON = (X + 2000, Y + 1200)
+POS_BATTLE_END = (X + 2000, Y + 950)
+POS_BATTLE_END_BUTTON = (X + 2000, Y + 1200)
 # Position of Other Button
-POS_UNLIMITED_LINEUP_BUTTON = (X + 960, Y + 650)
-POS_UNLIMITED_LINEUP_RESET = (X + 1760, Y + 325)
-POS_UNLIMITED_LINEUP_RESET_CONFIRM = (X + 1260, Y + 850)
-POS_SUMMON_TEN_BUTTON = (X + 1335, Y + 900)
-POS_SUMMON_END_BUTTON = (X + 1360, Y + 1025)
+POS_UNLIMITED_LINEUP_BUTTON = (X + 1100, Y + 800)
+POS_UNLIMITED_LINEUP_RESET = (X + 1900, Y + 475)
+POS_UNLIMITED_LINEUP_RESET_CONFIRM = (X + 1400, Y + 1000)
+POS_SUMMON_TEN_BUTTON = (X + 1475, Y + 1050)
+POS_SUMMON_END_BUTTON = (X + 1500, Y + 1175)
 # Color of fix_attack_one_turn cards
 COLOR_ATTACK_BUTTON = (0, 234, 247)
 # Red Attack  Cards: (153, 25, 24), (152, 24, 22), (154, 24, 23)
@@ -337,16 +339,22 @@ pyautogui.time.sleep(BUFFER_SECOND)
 # Log start time
 print(time.strftime("%Y-%m-%d %H:%M:%S\n", time.localtime()))
 
+# check the default value of FGO window
+win_FGO = pyautogui.getWindow('ApowerMirror Main')
+X = win_FGO.get_position()[0] - X_default
+Y = win_FGO.get_position()[1] - Y_default
+
 # 友情点召唤
 # friend_point_summon(cards_qty=140)
 
 # 圣诞节活动
 # 圣诞节无限池抽奖，每池500礼物
-# unlimited_lineup(gifts_qty=100)
+# unlimited_lineup(gifts_qty=400)
 
 # 圣诞2016复刻
 # christmas_2016_10ap()
 christmas_2016_20ap()
+
 
 # 通用无脑进攻
 # auto_battle(max_turns=6, max_red=3, max_blue=3, max_green=3)
