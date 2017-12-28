@@ -17,8 +17,8 @@ width, height = pyautogui.size()
 # Default position and color of ApowerMirror FGO window
 X = 0
 Y = 0
-X_default = 240
-Y_default = 154
+X_DEFAULT = 240
+Y_DEFAULT = 154
 # Position of Enemy
 POS_ENEMY = ((), (X + 420, Y + 250), (X + 750, Y + 250), (X + 1100, Y + 250))
 # Position of Buffers button
@@ -340,9 +340,9 @@ pyautogui.time.sleep(BUFFER_SECOND)
 print(time.strftime("%Y-%m-%d %H:%M:%S\n", time.localtime()))
 
 # check the default value of FGO window
-win_FGO = pyautogui.getWindow('ApowerMirror Main')
-X = win_FGO.get_position()[0] - X_default
-Y = win_FGO.get_position()[1] - Y_default
+win_fgo = pyautogui.getWindow('ApowerMirror Main')
+X = win_fgo.get_position()[0] - X_DEFAULT
+Y = win_fgo.get_position()[1] - Y_DEFAULT
 
 # 友情点召唤
 # friend_point_summon(cards_qty=140)
