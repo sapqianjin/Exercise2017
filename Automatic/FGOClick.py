@@ -5,9 +5,11 @@
 # add to GitHub
 # 2017.12.09: rename all var and function name.
 # todo background click window?
+# ApowerMirror 1.2.6 is OK, but the 1.2.7 is not available.
 
 import pyautogui
 import time
+import random
 
 BUFFER_SECOND = 1
 WAITING_SECOND = 1
@@ -15,10 +17,13 @@ pyautogui.PAUSE = 1
 pyautogui.FAILSAFE = True
 width, height = pyautogui.size()
 # Default position and color of ApowerMirror FGO window
-X = 0
-Y = 0
 X_DEFAULT = 240
 Y_DEFAULT = 154
+X = 0
+Y = 0
+# Define Random Range for small div
+POS_RANGE = 10
+TIME_RANGE = 2
 # Position of Enemy
 POS_ENEMY = ((), (X + 420, Y + 250), (X + 750, Y + 250), (X + 1100, Y + 250))
 # Position of Buffers button
@@ -65,17 +70,29 @@ def same_color(position, color):
         return False
 
 
+def click_around(postion):
+    # 避免每次精确点击同一像素
+    pos_div = random.randint(-POS_RANGE, POS_RANGE)
+    pyautogui.click(postion[0] + pos_div, postion[1] + pos_div)
+    return ()
+
+
+def sleep_around(time_sleep):
+    # 避免每次精确点击同一像素
+    time_div = random.randrange(0,TIME_RANGE)
+    pyautogui.time.sleep(time_sleep + time_div)
+    return ()
+
+
 def repeat_click1(position, repeat=1, waiting_time=WAITING_SECOND):
     # 单个位置重复点击
     try:
-        pos_x = position[0]
-        pos_y = position[1]
         for i in range(repeat, 0, -1):
             # 发现模拟器窗口无法点击，也无法按键切换回去
             # 只能使用Apower Mirror，测试OK
-            pyautogui.click(pos_x, pos_y)
+            click_around(position)
             print(i, time.strftime("%H:%M:%S", time.localtime()))
-            pyautogui.time.sleep(waiting_time)
+            sleep_around(waiting_time)
         print('Done.')
         # Log end time
         print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
@@ -89,8 +106,8 @@ def unlimited_lineup(gifts_qty=300):
     # 至少需要点击gifts_qty/10*4次
     # 重复次数取决于网络信号，通常加10%。
     click_round = int(round(gifts_qty / 10 * 4.1, 0))
-    # 每次点击大约2秒钟左右 (WAITING_SECOND + pyautogui.PAUSE)
-    print("Need around", int(round(click_round * (WAITING_SECOND + pyautogui.PAUSE) / 60, 60)), "Minutes.")
+    # 每次点击大约3秒钟左右 (WAITING_SECOND + time_div + pyautogui.PAUSE)
+    print("Need around", int(round(click_round * (WAITING_SECOND + TIME_RANGE / 2 + pyautogui.PAUSE) / 60, 60)), "Minutes.")
     repeat_click1(POS_UNLIMITED_LINEUP_BUTTON, click_round)
     return ()
 
@@ -101,16 +118,16 @@ def auto_unlimited_lineup(gifts_qty=300):
     # 但无法考虑额外的10%点击次数
     gifts_round = int(gifts_qty / 10)
     # 每次点击大约2秒钟左右 (WAITING_SECOND + pyautogui.PAUSE)
-    print("Need around", int(round(gifts_round * 4 * (WAITING_SECOND + pyautogui.PAUSE) / 60, 60)), "Minutes.")
+    print("Need around", int(round(gifts_round * 4 * (WAITING_SECOND + TIME_RANGE / 2 + pyautogui.PAUSE) / 60, 60)), "Minutes.")
     for i in range(gifts_round, 0, -1):
         if not (same_color(POS_UNLIMITED_LINEUP_BUTTON, COLOR_UNLIMITED_LINEUP_BUTTON)):
             if same_color(POS_UNLIMITED_LINEUP_RESET, COLOR_UNLIMITED_LINEUP_RESET):
-                pyautogui.click(POS_UNLIMITED_LINEUP_RESET)
-                pyautogui.time.sleep(WAITING_SECOND)
-                pyautogui.click(POS_UNLIMITED_LINEUP_RESET_CONFIRM)
-                pyautogui.time.sleep(WAITING_SECOND)
-                pyautogui.click(POS_UNLIMITED_LINEUP_RESET_CONFIRM)
-                pyautogui.time.sleep(WAITING_SECOND)
+                click_around(POS_UNLIMITED_LINEUP_RESET)
+                sleep_around(WAITING_SECOND)
+                click_around(POS_UNLIMITED_LINEUP_RESET_CONFIRM)
+                sleep_around(WAITING_SECOND)
+                click_around(POS_UNLIMITED_LINEUP_RESET_CONFIRM)
+                sleep_around(WAITING_SECOND)
         repeat_click1(POS_UNLIMITED_LINEUP_BUTTON, 4)
     return ()
 
@@ -118,12 +135,12 @@ def auto_unlimited_lineup(gifts_qty=300):
 def buffer_confirm(target=0):
     # confirm buffer
     # the confirm is already disable in game menu
-    # pyautogui.click(POS_BUFFER_CONFIRM)
+    # click_around(POS_BUFFER_CONFIRM)
     # choose target servant
     if target != 0:
-        pyautogui.click(POS_BUFFER_TARGETS[target])
+        click_around(POS_BUFFER_TARGETS[target])
         # waiting for result
-    pyautogui.time.sleep(3)
+        sleep_around(3)
     return ()
 
 
@@ -131,7 +148,7 @@ def choose_enemy(target=3):
     try:
         # click enemy
         if target != 0:
-            pyautogui.click(POS_ENEMY[target])
+            click_around(POS_ENEMY[target])
     except KeyboardInterrupt:
         print('User Break.')
     return ()
@@ -142,7 +159,7 @@ def servant_skill(servant, skill, target=0):
     # 需要指定目标则输入target参数
     try:
         # choose buffer
-        pyautogui.click(POS_SERVANT_SKILLS[servant][skill])
+        click_around(POS_SERVANT_SKILLS[servant][skill])
         # confirm buffer and choose target
         buffer_confirm(target)
     except KeyboardInterrupt:
@@ -155,9 +172,9 @@ def master_skill(skill, target=0):
     # 需要指定目标则输入target参数
     try:
         # open skill
-        pyautogui.click(POS_MASTER_SKILL_BUTTON)
+        click_around(POS_MASTER_SKILL_BUTTON)
         # choose skill
-        pyautogui.click(POS_MASTER_SKILLS[skill])
+        click_around(POS_MASTER_SKILLS[skill])
         # confirm buffer and choose target
         buffer_confirm(target)
     except KeyboardInterrupt:
@@ -170,7 +187,7 @@ def choose_attack_cards(cards):
     try:
         for card in cards:
             # click card
-            pyautogui.click(POS_ATTACK_CARDS[card])
+            click_around(POS_ATTACK_CARDS[card])
     except KeyboardInterrupt:
         print('User Break.')
     return ()
@@ -180,8 +197,8 @@ def fix_attack_one_turn(cards):
     # 战斗界面选择
     try:
         # open attack screen
-        pyautogui.click(POS_ATTACK_BUTTON)
-        pyautogui.time.sleep(3)
+        click_around(POS_ATTACK_BUTTON)
+        sleep_around(3)
         choose_attack_cards(cards)
     except KeyboardInterrupt:
         print('User Break.')
@@ -192,15 +209,15 @@ def auto_attack_one_turn(max_card=5, max_red=3, max_blue=3, max_green=3):
     # 自动战斗，按照红-蓝-绿颜色优先次序
     try:
         # open attack screen
-        pyautogui.click(POS_ATTACK_BUTTON)
-        pyautogui.time.sleep(3)
+        click_around(POS_ATTACK_BUTTON)
+        sleep_around(3)
         red_cards = []
         blue_cards = []
         green_cards = []
         for card in range(1, max_card + 1):
             im = pyautogui.screenshot()
             # pyautogui.moveTo(POS_ATTACK_CARDS[card])
-            # pyautogui.time.sleep(1)
+            # sleep_around(1)
             if im.getpixel(POS_ATTACK_CARDS[card])[1] > 85:
                 green_cards.append(card)
             elif im.getpixel(POS_ATTACK_CARDS[card])[1] > 45:
@@ -230,20 +247,21 @@ def friend_point_summon(cards_qty=10):
     # 友情点召唤
     try:
         cards_round = int(cards_qty / 10)
-        # 每次点击大约8秒钟左右 (4 + 4 * pyautogui.PAUSE)
-        print("Need around", int(round(cards_round * (4 + 4 * pyautogui.PAUSE) / 60, 60)), "Minutes.")
+        # 每次点击大约10秒钟左右 (4 +2 + 4 * pyautogui.PAUSE)
+        # 每次sleep_around大约要增加1秒，+2
+        print("Need around", int(round(cards_round * (4 + TIME_RANGE + 4 * pyautogui.PAUSE) / 60, 60)), "Minutes.")
         for i in range(cards_round, 0, -1):
             # click summon button
-            pyautogui.click(POS_SUMMON_END_BUTTON)
+            click_around(POS_SUMMON_END_BUTTON)
             # select summon 10 cards
-            pyautogui.click(POS_SUMMON_TEN_BUTTON)
+            click_around(POS_SUMMON_TEN_BUTTON)
             # confirm summon
-            pyautogui.click(POS_SUMMON_TEN_BUTTON)
+            click_around(POS_SUMMON_TEN_BUTTON)
             # waiting for result
-            pyautogui.time.sleep(3)
+            sleep_around(3)
             # click to finish summon
-            pyautogui.click(POS_SUMMON_END_BUTTON)
-            pyautogui.time.sleep(1)
+            click_around(POS_SUMMON_END_BUTTON)
+            sleep_around(1)
             print(i, time.strftime("%H:%M:%S", time.localtime()))
         print('Done.')
         # Log end time
@@ -274,7 +292,7 @@ def nero_fest_autumn_expert_last_turn(target=1):
     servant_skill(3, 1, target)
     # 默认按照孔明、贞德Alter、兰斯洛特依次使用宝具卡
     fix_attack_one_turn((8, 7, 6))
-    pyautogui.time.sleep(30)
+    sleep_around(30)
     repeat_click1(POS_BATTLE_END_BUTTON, 5)
     return ()
 
@@ -287,7 +305,7 @@ def common_last_turn(target=1):
     servant_skill(2, 3)  # Jeanne Alter: +Critical ATK
     # 默认按照孔明、贞德Alter、阿蒂拉依次使用宝具卡
     fix_attack_one_turn((8, 7, 6))
-    pyautogui.time.sleep(30)
+    sleep_around(30)
     repeat_click1(POS_BATTLE_END_BUTTON, 5)
     return ()
 
@@ -296,14 +314,14 @@ def auto_battle(max_turns=3, max_red=3, max_blue=3, max_green=3):
     for i in range(0, max_turns):
         print("turn:", i + 1)
         auto_attack_one_turn(max_card=5, max_red=max_red, max_blue=max_blue, max_green=max_green)
-        pyautogui.time.sleep(20)
+        sleep_around(20)
         # normal 15~20 second is ok, but if enemy NP, or servant died, need longer time
         new_attack_active = same_color(POS_ATTACK_BUTTON, COLOR_ATTACK_BUTTON)
         battle_end_active = same_color(POS_BATTLE_END, COLOR_BATTLE_END)
         # 只用颜色判断条件很容易死循环，加入循环次数判断，等待时间最多延长3次
         wait = 3
         while (not new_attack_active) and (not battle_end_active) and (wait > 0):
-            pyautogui.time.sleep(10)
+            sleep_around(10)
             print("  wait:", wait)
             wait = wait - 1
             new_attack_active = same_color(POS_ATTACK_BUTTON, COLOR_ATTACK_BUTTON)
@@ -317,25 +335,58 @@ def auto_battle(max_turns=3, max_red=3, max_blue=3, max_green=3):
 
 def christmas_2016_10ap():
     if same_color(POS_BATTLE_BEGIN_BUTTON, COLOR_BATTLE_BEGIN_BUTTON):
-        pyautogui.click(POS_BATTLE_BEGIN_BUTTON)
-        pyautogui.time.sleep(25)
+        click_around(POS_BATTLE_BEGIN_BUTTON)
+        sleep_around(25)
     auto_battle(max_turns=12, max_red=3, max_blue=4, max_green=4)
-    repeat_click1(POS_BATTLE_END_BUTTON, 3, 3)
+    repeat_click1(POS_BATTLE_END_BUTTON, repeat=3, waiting_time=3)
     return ()
 
 
 def christmas_2016_20ap():
     if same_color(POS_BATTLE_BEGIN_BUTTON, COLOR_BATTLE_BEGIN_BUTTON):
-        pyautogui.click(POS_BATTLE_BEGIN_BUTTON)
-        pyautogui.time.sleep(25)
+        click_around(POS_BATTLE_BEGIN_BUTTON)
+        sleep_around(25)
     auto_battle(max_turns=5, max_red=3, max_blue=3, max_green=4)
+    return ()
+
+
+def common_quest():
+    if same_color(POS_BATTLE_BEGIN_BUTTON, COLOR_BATTLE_BEGIN_BUTTON):
+        click_around(POS_BATTLE_BEGIN_BUTTON)
+        sleep_around(25)
+
+    servant_skill(3, 3)  # Kong Ming: +NP+ATK
+    servant_skill(3, 2)  # Kong Ming: +NP+Def
+    # 孔明技能1需要依照实际情况调整目标，默认黑贞
+    servant_skill(3, 1, 2)
+
+    auto_battle(max_turns=12, max_red=3, max_blue=4, max_green=4)
+    repeat_click1(POS_BATTLE_END_BUTTON, repeat=3, waiting_time=3)
+    return ()
+
+
+def christmas_2017_10ap():
+    if same_color(POS_BATTLE_BEGIN_BUTTON, COLOR_BATTLE_BEGIN_BUTTON):
+        click_around(POS_BATTLE_BEGIN_BUTTON)
+        sleep_around(25)
+    auto_battle(max_turns=4, max_red=3, max_blue=4, max_green=4)
+    repeat_click1(POS_BATTLE_END_BUTTON, repeat=3, waiting_time=3)
+    return ()
+
+
+def christmas_2017_30ap():
+    if same_color(POS_BATTLE_BEGIN_BUTTON, COLOR_BATTLE_BEGIN_BUTTON):
+        click_around(POS_BATTLE_BEGIN_BUTTON)
+        sleep_around(25)
+    auto_battle(max_turns=5, max_red=3, max_blue=3, max_green=3)
+    repeat_click1(POS_BATTLE_END_BUTTON, repeat=3, waiting_time=3)
     return ()
 
 
 # Main Program
 # Switch to FGO window
 pyautogui.hotkey('alt', 'tab')
-pyautogui.time.sleep(BUFFER_SECOND)
+sleep_around(BUFFER_SECOND)
 # Log start time
 print(time.strftime("%Y-%m-%d %H:%M:%S\n", time.localtime()))
 
@@ -345,22 +396,27 @@ X = win_fgo.get_position()[0] - X_DEFAULT
 Y = win_fgo.get_position()[1] - Y_DEFAULT
 
 # 友情点召唤
-# friend_point_summon(cards_qty=140)
+friend_point_summon(cards_qty=100)
 
 # 圣诞节活动
-# 圣诞节无限池抽奖，每池500礼物
-# unlimited_lineup(gifts_qty=400)
+# 圣诞节无限池抽奖，每池400礼物
+# unlimited_lineup(gifts_qty=100)
 
-# 圣诞2016复刻
-# christmas_2016_10ap()
-christmas_2016_20ap()
+# 圣诞2017
+# christmas_2017_10ap()
 
+# 通用任务
+# common_quest()
 
 # 通用无脑进攻
-# auto_battle(max_turns=6, max_red=3, max_blue=3, max_green=3)
+# auto_battle(max_turns=12, max_red=3, max_blue=3, max_green=4)
 
 # 通用最后一回合，
 # common_last_turn()
+
+# 圣诞2016复刻
+# christmas_2016_10ap()
+# christmas_2016_20ap()
 
 # 尼禄祭活动
 # 尼禄祭无限池抽奖，每池300礼物
