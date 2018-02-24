@@ -46,12 +46,9 @@ for i, (posX, waitingMinutes) in enumerate(((925, 5), (1085, 10), (1245, 20), (1
     # pyautogui.moveRel(0, -50, duration=0.1)
 
     # print button position, so we could understand the progress
-    logString ="%d    X:%4d, Y:%4d    Waiting:%2d Min.    Time " +time.strftime("%H:%M:%S", time.localtime())
-    print(logString % ( i + 1, posX, posY, waitingMinutes))
+    logString = "%d    X:%4d, Y:%4d    Waiting:%2d Min.    Time " + time.strftime("%H:%M:%S", time.localtime())
+    print(logString % (i + 1, posX, posY, waitingMinutes))
 
-    # print("X: {x:>4}, Y:{y:>4}, Waiting:{time:>2} Min.".format(x=posX, y=posY, time=waitingMinutes) )
-
-    # check the button pixel and click
     if pyautogui.pixelMatchesColor(posX, posY, (191, 44, 36)):
         oldX, oldY = pyautogui.position()
         pyautogui.click(posX, posY)

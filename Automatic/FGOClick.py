@@ -22,8 +22,8 @@ Y_DEFAULT = 154
 X = 0
 Y = 0
 # Define Random Range for small div
-POS_RANGE = 10
-TIME_RANGE = 2
+POS_RANGE = 5
+TIME_RANGE = 1
 # Position of Enemy
 POS_ENEMY = ((), (X + 420, Y + 250), (X + 750, Y + 250), (X + 1100, Y + 250))
 # Position of Buffers button
@@ -52,8 +52,8 @@ COLOR_ATTACK_BUTTON = (0, 234, 247)
 # Red Attack  Cards: (153, 25, 24), (152, 24, 22), (154, 24, 23)
 # Blue Attack  Cards: (22, 64, 147), (21, 64, 148), (21, 65, 151), (22, 66, 150), (23, 65, 151), (22, 63, 153)
 # Green Attack Cards: (30, 110, 12)
-COLOR_BATTLE_BEGIN_BUTTON = (182, 187, 191)
-COLOR_BATTLE_END = (3, 10, 15)
+COLOR_BATTLE_BEGIN_BUTTON = (187, 192, 195)
+COLOR_BATTLE_END = (8, 5, 3)
 COLOR_UNLIMITED_LINEUP_BUTTON = (21, 202, 243)
 COLOR_UNLIMITED_LINEUP_RESET = (138, 175, 223)
 
@@ -61,6 +61,7 @@ COLOR_UNLIMITED_LINEUP_RESET = (138, 175, 223)
 def same_color(position, color):
     # 按钮颜色难以完全一致，所以定义RGB色差之和在10以内均为OK
     color_position = pyautogui.screenshot().getpixel(position)
+    print("color_position is:", color_position)
     color_different = 0
     for i in range(0, 3):
         color_different = color_different + (color_position[i] - color[i])
@@ -79,7 +80,7 @@ def click_around(postion):
 
 def sleep_around(time_sleep):
     # 避免每次精确点击同一像素
-    time_div = random.randrange(0,TIME_RANGE)
+    time_div = random.randrange(0, TIME_RANGE)
     pyautogui.time.sleep(time_sleep + time_div)
     return ()
 
@@ -139,8 +140,8 @@ def buffer_confirm(target=0):
     # choose target servant
     if target != 0:
         click_around(POS_BUFFER_TARGETS[target])
-        # waiting for result
-        sleep_around(3)
+    # waiting for result
+    sleep_around(3)
     return ()
 
 
@@ -243,6 +244,40 @@ def auto_attack_one_turn(max_card=5, max_red=3, max_blue=3, max_green=3):
     return ()
 
 
+def battle_begin():
+    # print("POS_BATTLE_BEGIN_BUTTON",POS_BATTLE_BEGIN_BUTTON)
+    # print("COLOR_BATTLE_BEGIN_BUTTON",COLOR_BATTLE_BEGIN_BUTTON)
+    if same_color(POS_BATTLE_BEGIN_BUTTON, COLOR_BATTLE_BEGIN_BUTTON):
+        print("same color, battle_begin")
+        click_around(POS_BATTLE_BEGIN_BUTTON)
+        sleep_around(25)
+    return ()
+
+
+def battle_end():
+    print("now in battle end function.")
+    sleep_around(20)
+    # normal 15~20 second is ok, but if enemy NP, or servant died, need longer time
+    new_attack_active = same_color(POS_ATTACK_BUTTON, COLOR_ATTACK_BUTTON)
+    battle_end_active = same_color(POS_BATTLE_END, COLOR_BATTLE_END)
+    # 只用颜色判断条件很容易死循环，加入循环次数判断，等待时间最多延长3次
+    wait = 3
+    while (not new_attack_active) and (not battle_end_active) and (wait > 0):
+        sleep_around(10)
+        print("  wait:", wait)
+        wait = wait - 1
+        new_attack_active = same_color(POS_ATTACK_BUTTON, COLOR_ATTACK_BUTTON)
+        battle_end_active = same_color(POS_BATTLE_END, COLOR_BATTLE_END)
+        print()
+    # 判断是否完毕
+    if battle_end_active:
+        print("battle_end_active")
+        repeat_click1(POS_BATTLE_END_BUTTON, repeat=3, waiting_time=3)
+        return True
+    else:
+        return False
+
+
 def friend_point_summon(cards_qty=10):
     # 友情点召唤
     try:
@@ -272,6 +307,7 @@ def friend_point_summon(cards_qty=10):
 
 
 def nero_fest_autumn_expert_first_turn():
+    battle_begin()
     choose_enemy(1)
     servant_skill(3, 1, 1)
     servant_skill(3, 2, 0)
@@ -292,8 +328,7 @@ def nero_fest_autumn_expert_last_turn(target=1):
     servant_skill(3, 1, target)
     # 默认按照孔明、贞德Alter、兰斯洛特依次使用宝具卡
     fix_attack_one_turn((8, 7, 6))
-    sleep_around(30)
-    repeat_click1(POS_BATTLE_END_BUTTON, 5)
+    battle_end()
     return ()
 
 
@@ -305,8 +340,7 @@ def common_last_turn(target=1):
     servant_skill(2, 3)  # Jeanne Alter: +Critical ATK
     # 默认按照孔明、贞德Alter、阿蒂拉依次使用宝具卡
     fix_attack_one_turn((8, 7, 6))
-    sleep_around(30)
-    repeat_click1(POS_BATTLE_END_BUTTON, 5)
+    battle_end()
     return ()
 
 
@@ -314,74 +348,125 @@ def auto_battle(max_turns=3, max_red=3, max_blue=3, max_green=3):
     for i in range(0, max_turns):
         print("turn:", i + 1)
         auto_attack_one_turn(max_card=5, max_red=max_red, max_blue=max_blue, max_green=max_green)
-        sleep_around(20)
-        # normal 15~20 second is ok, but if enemy NP, or servant died, need longer time
-        new_attack_active = same_color(POS_ATTACK_BUTTON, COLOR_ATTACK_BUTTON)
-        battle_end_active = same_color(POS_BATTLE_END, COLOR_BATTLE_END)
-        # 只用颜色判断条件很容易死循环，加入循环次数判断，等待时间最多延长3次
-        wait = 3
-        while (not new_attack_active) and (not battle_end_active) and (wait > 0):
-            sleep_around(10)
-            print("  wait:", wait)
-            wait = wait - 1
-            new_attack_active = same_color(POS_ATTACK_BUTTON, COLOR_ATTACK_BUTTON)
-            battle_end_active = same_color(POS_BATTLE_END, COLOR_BATTLE_END)
-            print()
-        # 判断是否完毕
-        if battle_end_active:
+        if battle_end():
+            print("battle_end")
+            break
+    return ()
+
+
+def auto_battle_with_buffer(max_turns=3, max_red=3, max_blue=3, max_green=3):
+    for i in range(1, max_turns+1):
+        print("turn:", i)
+        if i == 1:
+            servant_skill(1, 2)  # Jeanne Alter: +ALL ATK
+            servant_skill(2, 1)  # Artila +ALL NP ATK
+            servant_skill(3, 2)  # Kong Ming: +ALL NP+Def
+            servant_skill(3, 3)  # Kong Ming: +ALL NP+ATK
+            # 孔明技能1需要依照实际情况调整目标，默认Artila
+            servant_skill(3, 1, 2)  # Kong Ming: +NP
+        if i !=7:
+            auto_attack_one_turn(max_card=5, max_red=max_red, max_blue=max_blue, max_green=max_green)
+        else:
+            servant_skill(1, 1)  # Jeanne Alter: +ATK
+            servant_skill(1, 2)  # Jeanne Alter: +ALL ATK
+            servant_skill(1, 3)  # Jeanne Alter: +Critical ATK
+            servant_skill(2, 1)  # Artila +ALL NP ATK
+            servant_skill(2, 2)  # Artila +ATK
+            servant_skill(2, 3)  # Artila +Critical
+            servant_skill(3, 2)  # Kong Ming: +ALL NP+Def
+            servant_skill(3, 3)  # Kong Ming: +ALL NP+ATK
+            # 孔明技能1需要依照实际情况调整目标，默认Artila
+            servant_skill(3, 1, 2)  # Kong Ming: +NP
+            fix_attack_one_turn((7,6,1))
+        if battle_end():
+            print("battle_end")
             break
     return ()
 
 
 def christmas_2016_10ap():
-    if same_color(POS_BATTLE_BEGIN_BUTTON, COLOR_BATTLE_BEGIN_BUTTON):
-        click_around(POS_BATTLE_BEGIN_BUTTON)
-        sleep_around(25)
+    battle_begin()
     auto_battle(max_turns=12, max_red=3, max_blue=4, max_green=4)
-    repeat_click1(POS_BATTLE_END_BUTTON, repeat=3, waiting_time=3)
     return ()
 
 
 def christmas_2016_20ap():
-    if same_color(POS_BATTLE_BEGIN_BUTTON, COLOR_BATTLE_BEGIN_BUTTON):
-        click_around(POS_BATTLE_BEGIN_BUTTON)
-        sleep_around(25)
+    battle_begin()
     auto_battle(max_turns=5, max_red=3, max_blue=3, max_green=4)
     return ()
 
 
 def common_quest():
-    if same_color(POS_BATTLE_BEGIN_BUTTON, COLOR_BATTLE_BEGIN_BUTTON):
-        click_around(POS_BATTLE_BEGIN_BUTTON)
-        sleep_around(25)
-
+    battle_begin()
     servant_skill(3, 3)  # Kong Ming: +NP+ATK
     servant_skill(3, 2)  # Kong Ming: +NP+Def
     # 孔明技能1需要依照实际情况调整目标，默认黑贞
     servant_skill(3, 1, 2)
-
     auto_battle(max_turns=12, max_red=3, max_blue=4, max_green=4)
-    repeat_click1(POS_BATTLE_END_BUTTON, repeat=3, waiting_time=3)
     return ()
 
 
 def christmas_2017_10ap():
-    if same_color(POS_BATTLE_BEGIN_BUTTON, COLOR_BATTLE_BEGIN_BUTTON):
-        click_around(POS_BATTLE_BEGIN_BUTTON)
-        sleep_around(25)
+    battle_begin()
     auto_battle(max_turns=4, max_red=3, max_blue=4, max_green=4)
-    repeat_click1(POS_BATTLE_END_BUTTON, repeat=3, waiting_time=3)
     return ()
 
 
 def christmas_2017_30ap():
-    if same_color(POS_BATTLE_BEGIN_BUTTON, COLOR_BATTLE_BEGIN_BUTTON):
-        click_around(POS_BATTLE_BEGIN_BUTTON)
-        sleep_around(25)
+    battle_begin()
     auto_battle(max_turns=5, max_red=3, max_blue=3, max_green=3)
-    repeat_click1(POS_BATTLE_END_BUTTON, repeat=3, waiting_time=3)
     return ()
 
+
+def chapter_last_barbatos():
+    battle_begin()
+    # 默认采用贞德Alter、孔明、坂田金时组队
+    servant_skill(1, 1)  # Jeanne Alter: +ATK
+    servant_skill(1, 2)  # Jeanne Alter: +ALL ATK
+    servant_skill(1, 3)  # Jeanne Alter: +Critical ATK
+    servant_skill(2, 2)  # Kong Ming: +ALL NP+Def
+    servant_skill(2, 3)  # Kong Ming: +ALL NP+ATK
+    # 孔明技能1需要依照实际情况调整目标，默认坂田金时
+    servant_skill(3, 1, 3)  # Kong Ming: +NP
+    # 默认按照红卡、贞德Alter宝具、坂田金时宝具的顺序
+    master_skill(2, 3)  # +ATK to Kintaroo
+    master_skill(3, 3)  # +Def to Kintaroo
+
+    click_around(POS_ATTACK_BUTTON)
+    sleep_around(3)
+    red_cards = []
+    blue_cards = []
+    green_cards = []
+    for card in range(1, 6):
+        im = pyautogui.screenshot()
+        # pyautogui.moveTo(POS_ATTACK_CARDS[card])
+        # sleep_around(1)
+        if im.getpixel(POS_ATTACK_CARDS[card])[1] > 85:
+            green_cards.append(card)
+        elif im.getpixel(POS_ATTACK_CARDS[card])[1] > 45:
+            blue_cards.append(card)
+        else:
+            red_cards.append(card)
+    if len(red_cards) >= 1:
+        choose_attack_cards((red_cards[0:1], 6, 8))
+    elif len(blue_cards) >= 1:
+        choose_attack_cards((blue_cards[0:1], 6, 8))
+    elif len(green_cards) >= 1:
+        choose_attack_cards((green_cards[0:1], 6, 8))
+    while not (battle_end()):
+        auto_battle(max_turns=4, max_red=3, max_blue=4, max_green=4)
+    return ()
+
+
+def daily_30ap():
+    battle_begin()
+    auto_battle(max_turns=9, max_red=3, max_blue=3, max_green=3)
+    return ()
+
+def daily_40ap():
+    battle_begin()
+    auto_battle_with_buffer(max_turns=9, max_red=3, max_blue=3, max_green=3)
+    return ()
 
 # Main Program
 # Switch to FGO window
@@ -396,14 +481,7 @@ X = win_fgo.get_position()[0] - X_DEFAULT
 Y = win_fgo.get_position()[1] - Y_DEFAULT
 
 # 友情点召唤
-friend_point_summon(cards_qty=100)
-
-# 圣诞节活动
-# 圣诞节无限池抽奖，每池400礼物
-# unlimited_lineup(gifts_qty=100)
-
-# 圣诞2017
-# christmas_2017_10ap()
+# friend_point_summon(cards_qty=100)
 
 # 通用任务
 # common_quest()
@@ -413,6 +491,20 @@ friend_point_summon(cards_qty=100)
 
 # 通用最后一回合，
 # common_last_turn()
+
+daily_40ap()
+
+# Already DONE.
+
+# 魔神柱任务
+# chapter_last_barbatos()
+
+# 圣诞节活动
+# 圣诞节无限池抽奖，每池400礼物
+# unlimited_lineup(gifts_qty=100)
+
+# 圣诞2017
+# christmas_2017_10ap()
 
 # 圣诞2016复刻
 # christmas_2016_10ap()
