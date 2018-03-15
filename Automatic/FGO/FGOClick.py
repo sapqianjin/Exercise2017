@@ -10,6 +10,7 @@
 import pyautogui
 import time
 import random
+import winsound
 
 BUFFER_SECOND = 1
 WAITING_SECOND = 1
@@ -53,8 +54,8 @@ COLOR_ATTACK_BUTTON = (0, 234, 247)
 # Blue Attack  Cards: (22, 64, 147), (21, 64, 148), (21, 65, 151), (22, 66, 150), (23, 65, 151), (22, 63, 153)
 # Green Attack Cards: (30, 110, 12)
 COLOR_BATTLE_BEGIN_BUTTON = (187, 192, 195)
-COLOR_BATTLE_END = (8, 5, 3)
 COLOR_BATTLE_END_ASCEND = (0, 1, 0)
+COLOR_BATTLE_END = (8, 5, 3)
 COLOR_UNLIMITED_LINEUP_BUTTON = (21, 202, 243)
 COLOR_UNLIMITED_LINEUP_RESET = (138, 175, 223)
 
@@ -62,13 +63,14 @@ COLOR_UNLIMITED_LINEUP_RESET = (138, 175, 223)
 def same_color(position, color):
     # 按钮颜色难以完全一致，所以定义RGB色差之和在10以内均为OK
     color_position = pyautogui.screenshot().getpixel(position)
-    print("current position color is:", color_position)
     color_different = 0
     for i in range(0, 3):
         color_different = color_different + (color_position[i] - color[i])
     if abs(color_different) < 10:
+        print("current color", color_position, "is: same.")
         return True
     else:
+        print("current color", color_position, "is: different.")
         return False
 
 
@@ -80,7 +82,7 @@ def click_around(postion):
 
 
 def sleep_around(time_sleep):
-    # 避免每次精确点击同一像素
+    # 避免每次精确等待相同时间
     time_div = random.randrange(0, TIME_RANGE)
     pyautogui.time.sleep(time_sleep + time_div)
     return ()
@@ -226,6 +228,7 @@ def get_cards(max_card=5):
 
 def auto_attack_one_turn(max_card=5, max_red=3, max_blue=3, max_green=3):
     # 自动战斗，按照红-蓝-绿颜色优先次序
+    # 普通攻击抽卡无非以下几种情况：红≥3；蓝≥3；绿≥3；红2蓝≥1绿≥1；红1蓝≥1绿≥1；
     try:
         # open attack screen
         click_around(POS_ATTACK_BUTTON)
@@ -254,7 +257,18 @@ def battle_begin():
     # print("POS_BATTLE_BEGIN_BUTTON",POS_BATTLE_BEGIN_BUTTON)
     # print("COLOR_BATTLE_BEGIN_BUTTON",COLOR_BATTLE_BEGIN_BUTTON)
     print("now check battle begin or continue:")
-    if same_color(POS_BATTLE_BEGIN_BUTTON, COLOR_BATTLE_BEGIN_BUTTON):
+    new_attack_active = same_color(POS_ATTACK_BUTTON, COLOR_ATTACK_BUTTON)
+    battle_begin_active = same_color(POS_BATTLE_BEGIN_BUTTON, COLOR_BATTLE_BEGIN_BUTTON)
+    # 有时会出现既不在开始画面，又不在战斗画面的情况，加入等待3次*10秒的机制
+    wait = 3
+    while (not new_attack_active) and (not battle_begin_active) and (wait > 0):
+        sleep_around(10)
+        print("  wait:", wait)
+        wait = wait - 1
+        new_attack_active = same_color(POS_ATTACK_BUTTON, COLOR_ATTACK_BUTTON)
+        battle_begin_active = same_color(POS_BATTLE_BEGIN_BUTTON, COLOR_BATTLE_BEGIN_BUTTON)
+        print()
+    if battle_begin_active:
         print("battle_begin.")
         click_around(POS_BATTLE_BEGIN_BUTTON)
         sleep_around(25)
@@ -266,22 +280,23 @@ def battle_end():
     print("now check battle end or not:")
     # normal 15~20 second is ok, but if enemy NP, or servant died, need longer time
     new_attack_active = same_color(POS_ATTACK_BUTTON, COLOR_ATTACK_BUTTON)
-    battle_end_active = same_color(POS_BATTLE_END, COLOR_BATTLE_END)
     battle_end_ascend_active = same_color(POS_BATTLE_END, COLOR_BATTLE_END_ASCEND)
+    battle_end_active = same_color(POS_BATTLE_END, COLOR_BATTLE_END)
     # 只用颜色判断条件很容易死循环，加入循环次数判断，等待时间最多延长3次
     wait = 3
-    while (not new_attack_active) and (not battle_end_active) and (not battle_end_ascend_active) and (wait > 0):
+    while (not new_attack_active) and (not battle_end_ascend_active) and (not battle_end_active) and (wait > 0):
         sleep_around(10)
         print("  wait:", wait)
         wait = wait - 1
         new_attack_active = same_color(POS_ATTACK_BUTTON, COLOR_ATTACK_BUTTON)
-        battle_end_active = same_color(POS_BATTLE_END, COLOR_BATTLE_END)
         battle_end_ascend_active = same_color(POS_BATTLE_END, COLOR_BATTLE_END_ASCEND)
+        battle_end_active = same_color(POS_BATTLE_END, COLOR_BATTLE_END)
         print()
     # 判断是否完毕
-    if battle_end_active or battle_end_ascend_active:
+    if battle_end_ascend_active or battle_end_active:
         print("battle_end_active")
         repeat_click1(POS_BATTLE_END_BUTTON, repeat=3, waiting_time=3)
+        winsound.PlaySound("SystemExit", winsound.SND_ALIAS)
         return True
     else:
         return False
@@ -363,19 +378,22 @@ def auto_battle(max_turns=3, max_red=3, max_blue=3, max_green=3):
     return ()
 
 
-def auto_battle_with_buffer(max_turns=3, max_red=3, max_blue=3, max_green=3):
+def auto_battle_with_buffer(max_turns=9, max_red=3, max_blue=3, max_green=3):
     for i in range(1, max_turns + 1):
         print("turn:", i)
         if i == 1:
+            # servant_skill(1, 1)  # Jeanne Alter: +ATK
             servant_skill(1, 2)  # Jeanne Alter: +ALL ATK
+            servant_skill(1, 3)  # Jeanne Alter: +Critical ATK
             servant_skill(2, 1)  # Artila +ALL NP ATK
+            # servant_skill(2, 2)  # Artila +ATK
+            servant_skill(2, 3)  # Artila +Critical
             # 孔明技能1需要依照实际情况调整目标，默认Artila
             servant_skill(3, 1, 2)  # Kong Ming: +NP
             servant_skill(3, 2)  # Kong Ming: +ALL NP+Def
             servant_skill(3, 3)  # Kong Ming: +ALL NP+ATK
-        if i != 7:
             auto_attack_one_turn(max_card=5, max_red=max_red, max_blue=max_blue, max_green=max_green)
-        else:
+        elif i == 7:
             servant_skill(1, 1)  # Jeanne Alter: +ATK
             servant_skill(1, 2)  # Jeanne Alter: +ALL ATK
             servant_skill(1, 3)  # Jeanne Alter: +Critical ATK
@@ -386,10 +404,14 @@ def auto_battle_with_buffer(max_turns=3, max_red=3, max_blue=3, max_green=3):
             servant_skill(3, 1, 2)  # Kong Ming: +NP
             servant_skill(3, 2)  # Kong Ming: +ALL NP+Def
             servant_skill(3, 3)  # Kong Ming: +ALL NP+ATK
+            master_skill(1, 0)  # +ALL ATK
             click_around(POS_ATTACK_BUTTON)
             sleep_around(3)
             (red_cards, blue_cards, green_cards) = get_cards(max_card=5)
-            choose_attack_cards([7, 6] + (red_cards + blue_cards + green_cards)[0:1])
+            print((red_cards + blue_cards + green_cards)[0:1] + [8, 6])
+            choose_attack_cards((red_cards + blue_cards + green_cards)[0:1] + [8, 6])
+        else:
+            auto_attack_one_turn(max_card=5, max_red=max_red, max_blue=max_blue, max_green=max_green)
         if battle_end():
             print("battle_end, exit.")
             break
@@ -405,16 +427,6 @@ def christmas_2016_10ap():
 def christmas_2016_20ap():
     battle_begin()
     auto_battle(max_turns=5, max_red=3, max_blue=3, max_green=4)
-    return ()
-
-
-def common_quest():
-    battle_begin()
-    servant_skill(3, 3)  # Kong Ming: +NP+ATK
-    servant_skill(3, 2)  # Kong Ming: +NP+Def
-    # 孔明技能1需要依照实际情况调整目标，默认黑贞
-    servant_skill(3, 1, 2)
-    auto_battle(max_turns=12, max_red=3, max_blue=4, max_green=4)
     return ()
 
 
@@ -470,18 +482,16 @@ def chapter_last_barbatos():
     return ()
 
 
-def daily_30ap():
-    # Jeanne, Artila, Kong Ming
-    battle_begin()
-    auto_battle(max_turns=9, max_red=3, max_blue=3, max_green=3)
-    return ()
-
-
 def daily_40ap():
     # Jeanne, Artila, Kong Ming
     battle_begin()
     auto_battle_with_buffer(max_turns=12, max_red=3, max_blue=3, max_green=3)
     return ()
+
+def QP_40ap():
+    # Jeanne, Artila, Rider
+    battle_begin()
+    auto_battle_with_buffer(max_turns=12, max_red=3, max_blue=3, max_green=3)
 
 
 # Main Program
@@ -499,29 +509,24 @@ Y = win_fgo.get_position()[1] - Y_DEFAULT
 # 友情点召唤
 # friend_point_summon(cards_qty=100)
 
-# 通用任务
-# common_quest()
-
-# 通用无脑进攻
-# auto_battle(max_turns=12, max_red=3, max_blue=3, max_green=4)
-
-# 通用最后一回合，
-# common_last_turn()
-
+# 每日任务
 daily_40ap()
+# QP_40ap()
 
 # Already DONE.
 
+# 通用无脑进攻
+# auto_battle(max_turns=12, max_red=3, max_blue=3, max_green=4)
+# 通用最后一回合，
+# common_last_turn()
 # 魔神柱任务
 # chapter_last_barbatos()
 
 # 圣诞节活动
 # 圣诞节无限池抽奖，每池400礼物
 # unlimited_lineup(gifts_qty=100)
-
 # 圣诞2017
 # christmas_2017_10ap()
-
 # 圣诞2016复刻
 # christmas_2016_10ap()
 # christmas_2016_20ap()
@@ -529,10 +534,8 @@ daily_40ap()
 # 尼禄祭活动
 # 尼禄祭无限池抽奖，每池300礼物
 # unlimited_lineup(gifts_qty=300)
-
 # 尼禄祭花瓣池第一回合
 # nero_fest_autumn_expert_first_turn()
-
 # 尼禄祭花瓣池最后一回合
 # 孔明技能1需要依照实际情况调整目标
 # nero_fest_autumn_expert_last_turn(target=1)

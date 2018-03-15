@@ -5,7 +5,7 @@
 
 import time
 import pyautogui
-import win32com
+import win32com, win32api, win32con, win32gui
 import win32com.client
 
 # # win32com SendKeys
@@ -19,14 +19,53 @@ import win32com.client
 
 
 
-# # win32com SendKeys
-# # unavailable, the window is active, but the key cannot be sent.
+# win32com SendKeys
+
+# # test for win32com, run new program
 # shell = win32com.client.Dispatch('WScript.Shell')
-# # shell.Run("notepad")
+# shell.Run("notepad")
 # time.sleep(0.1)
-# # shell.SendKeys("Hello Word", 0)
-# # shell.SendKeys('{Enter}', 0)
-# # shell.SendKeys('{F5}', 0)
+# shell.SendKeys("Hello Word", 0)
+# shell.SendKeys('{Enter}', 0)
+# shell.SendKeys('{F5}', 0)
+# # OK
+#
+# # test for win32com, active exist program
+# shell = win32com.client.Dispatch('WScript.Shell')
+# shell.AppActivate('Untitled - Notepad')
+# shell.SendKeys("Hello Word", 0)
+# shell.SendKeys('{Enter}', 0)
+# shell.SendKeys('{F5}', 0)
+# # OK
+
+
+# test for win32api, active exist program, send mouse move and click
+def clickLeft (x, y):
+    win32api.SetCursorPos((x,y)) # 将鼠标移动到x,y 的位置
+    win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN,x,y,0,0) # 驱动鼠标左击按下
+    time.sleep(1)  # in term of seconds
+    win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP,x,y,0,0) # 驱动鼠标左击提起，点击完成
+    time.sleep(1)
+
+def clickRight (x, y):
+    win32api.SetCursorPos((x, y))  # 将鼠标移动到x,y 的位置
+    win32api.mouse_event(win32con.MOUSEEVENTF_RIGHTDOWN, x, y, 0, 0)
+    time.sleep(1)  # in term of seconds
+    win32api.mouse_event(win32con.MOUSEEVENTF_RIGHTUP, x, y, 0, 0)
+    time.sleep(1)
+
+shell = win32com.client.Dispatch('WScript.Shell')
+shell.AppActivate('Untitled - Notepad')
+# shell.SendKeys('{ClickLeft, 100, 100}',0)
+# shell.SendKeys('{Move, 500, 800}',0)
+# shell.SendKeys('{ClickLeft, 1500, 800}',0)
+# shell.SendKeys('{ClickLeft, 1500, 800}',0)
+flags, hcursor, (x,y) = win32gui.GetCursorInfo() # x, y 就是当前鼠标的位置
+print(x,y)
+clickLeft(1391,650)
+clickRight(1391,650)
+# OK
+
 # shell.AppActivate('FGO_Bilibili')
 # shell.SendKeys('{ClickLeft, 100, 100}',0)
 # shell.SendKeys('{Move, 500, 800}',0)
