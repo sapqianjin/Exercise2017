@@ -20,7 +20,7 @@ width, height = pyautogui.size()
 # Default position and color of ApowerMirror FGO window
 X_DEFAULT = 240
 Y_DEFAULT = 154
-X = 0
+X = -70
 Y = 0
 # Define Random Range for small div
 POS_RANGE = 5
@@ -38,7 +38,7 @@ POS_BUFFER_CONFIRM = (X + 1500, Y + 800)
 POS_BUFFER_TARGETS = ((), (X + 850, Y + 850), (X + 1230, Y + 850), (X + 1700, Y + 850))
 # Position of Attach Button and Cards
 POS_ATTACK_BUTTON = (X + 2000, Y + 1000)
-POS_ATTACK_CARDS = ((), (X + 440, Y + 900), (X + 815, Y + 900), (X + 1175, Y + 900), (X + 1545, Y + 900), (X + 1920, Y + 900), (X + 1020, Y + 650), (X + 1355, Y + 650), (X + 1635, Y + 650))
+POS_ATTACK_CARDS = ((), (X + 440, Y + 900), (X + 815, Y + 900), (X + 1175, Y + 900), (X + 1545, Y + 900), (X + 1920, Y + 900), (X + 1020, Y + 620), (X + 1355, Y + 620), (X + 1525, Y + 620))
 POS_BATTLE_BEGIN_BUTTON = (X + 2000, Y + 1200)
 POS_BATTLE_END = (X + 2000, Y + 950)
 POS_BATTLE_END_BUTTON = (X + 2000, Y + 1200)
@@ -53,7 +53,7 @@ COLOR_ATTACK_BUTTON = (0, 234, 247)
 # Red Attack  Cards: (153, 25, 24), (152, 24, 22), (154, 24, 23)
 # Blue Attack  Cards: (22, 64, 147), (21, 64, 148), (21, 65, 151), (22, 66, 150), (23, 65, 151), (22, 63, 153)
 # Green Attack Cards: (30, 110, 12)
-COLOR_BATTLE_BEGIN_BUTTON = (187, 192, 195)
+COLOR_BATTLE_BEGIN_BUTTON = (191, 197, 198)
 COLOR_BATTLE_END_ASCEND = (0, 1, 0)
 COLOR_BATTLE_END = (8, 5, 3)
 COLOR_UNLIMITED_LINEUP_BUTTON = (21, 202, 243)
@@ -67,10 +67,10 @@ def same_color(position, color):
     for i in range(0, 3):
         color_different = color_different + (color_position[i] - color[i])
     if abs(color_different) < 10:
-        print("current color", color_position, "is: same.")
+        print(color_position, "active.")
         return True
     else:
-        print("current color", color_position, "is: different.")
+        print(color_position, "inactive.")
         return False
 
 
@@ -213,8 +213,8 @@ def get_cards(max_card=5):
     red_cards = []
     blue_cards = []
     green_cards = []
+    im = pyautogui.screenshot()
     for card in range(1, max_card + 1):
-        im = pyautogui.screenshot()
         # pyautogui.moveTo(POS_ATTACK_CARDS[card])
         # sleep_around(1)
         if im.getpixel(POS_ATTACK_CARDS[card])[1] > 85:
@@ -257,7 +257,9 @@ def battle_begin():
     # print("POS_BATTLE_BEGIN_BUTTON",POS_BATTLE_BEGIN_BUTTON)
     # print("COLOR_BATTLE_BEGIN_BUTTON",COLOR_BATTLE_BEGIN_BUTTON)
     print("now check battle begin or continue:")
+    print("attack button ", end="")
     new_attack_active = same_color(POS_ATTACK_BUTTON, COLOR_ATTACK_BUTTON)
+    print("battle begin ", end="")
     battle_begin_active = same_color(POS_BATTLE_BEGIN_BUTTON, COLOR_BATTLE_BEGIN_BUTTON)
     # 有时会出现既不在开始画面，又不在战斗画面的情况，加入等待3次*10秒的机制
     wait = 3
@@ -279,21 +281,27 @@ def battle_end():
     sleep_around(20)
     print("now check battle end or not:")
     # normal 15~20 second is ok, but if enemy NP, or servant died, need longer time
+    print("attack ", end="")
     new_attack_active = same_color(POS_ATTACK_BUTTON, COLOR_ATTACK_BUTTON)
-    battle_end_ascend_active = same_color(POS_BATTLE_END, COLOR_BATTLE_END_ASCEND)
+    print("battle end ", end="")
     battle_end_active = same_color(POS_BATTLE_END, COLOR_BATTLE_END)
+    print("ascend level up ", end="")
+    battle_end_ascend_active = same_color(POS_BATTLE_END, COLOR_BATTLE_END_ASCEND)
     # 只用颜色判断条件很容易死循环，加入循环次数判断，等待时间最多延长3次
     wait = 3
     while (not new_attack_active) and (not battle_end_ascend_active) and (not battle_end_active) and (wait > 0):
         sleep_around(10)
         print("  wait:", wait)
         wait = wait - 1
+        print("attack ", end="")
         new_attack_active = same_color(POS_ATTACK_BUTTON, COLOR_ATTACK_BUTTON)
-        battle_end_ascend_active = same_color(POS_BATTLE_END, COLOR_BATTLE_END_ASCEND)
+        print("battle end ", end="")
         battle_end_active = same_color(POS_BATTLE_END, COLOR_BATTLE_END)
+        print("ascend level up ", end="")
+        battle_end_ascend_active = same_color(POS_BATTLE_END, COLOR_BATTLE_END_ASCEND)
         print()
     # 判断是否完毕
-    if battle_end_ascend_active or battle_end_active:
+    if battle_end_active or battle_end_ascend_active:
         print("battle_end_active")
         repeat_click1(POS_BATTLE_END_BUTTON, repeat=3, waiting_time=3)
         winsound.PlaySound("SystemExit", winsound.SND_ALIAS)
@@ -382,24 +390,24 @@ def auto_battle_with_buffer(max_turns=9, max_red=3, max_blue=3, max_green=3):
     for i in range(1, max_turns + 1):
         print("turn:", i)
         if i == 1:
-            # servant_skill(1, 1)  # Jeanne Alter: +ATK
-            servant_skill(1, 2)  # Jeanne Alter: +ALL ATK
+            servant_skill(1, 1)  # Jeanne Alter: +ATK
+            # servant_skill(1, 2)  # Jeanne Alter: +ALL ATK
             servant_skill(1, 3)  # Jeanne Alter: +Critical ATK
-            servant_skill(2, 1)  # Artila +ALL NP ATK
-            # servant_skill(2, 2)  # Artila +ATK
+            # servant_skill(2, 1)  # Artila +ALL NP ATK
+            servant_skill(2, 2)  # Artila +ATK
             servant_skill(2, 3)  # Artila +Critical
             # 孔明技能1需要依照实际情况调整目标，默认Artila
             servant_skill(3, 1, 2)  # Kong Ming: +NP
             servant_skill(3, 2)  # Kong Ming: +ALL NP+Def
             servant_skill(3, 3)  # Kong Ming: +ALL NP+ATK
             auto_attack_one_turn(max_card=5, max_red=max_red, max_blue=max_blue, max_green=max_green)
-        elif i == 7:
+        elif i == 8:
             servant_skill(1, 1)  # Jeanne Alter: +ATK
-            servant_skill(1, 2)  # Jeanne Alter: +ALL ATK
+            servant_skill(1, 2,1)  # Jeanne Alter: +ALL ATK
             servant_skill(1, 3)  # Jeanne Alter: +Critical ATK
-            servant_skill(2, 1)  # Artila +ALL NP ATK
+            # servant_skill(2, 1)  # Artila +ALL NP ATK
             servant_skill(2, 2)  # Artila +ATK
-            # servant_skill(2, 3)  # Artila +Critical
+            servant_skill(2, 3)  # Artila +Critical
             # 孔明技能1需要依照实际情况调整目标，默认Artila
             servant_skill(3, 1, 2)  # Kong Ming: +NP
             servant_skill(3, 2)  # Kong Ming: +ALL NP+Def
@@ -407,9 +415,15 @@ def auto_battle_with_buffer(max_turns=9, max_red=3, max_blue=3, max_green=3):
             master_skill(1, 0)  # +ALL ATK
             click_around(POS_ATTACK_BUTTON)
             sleep_around(3)
-            (red_cards, blue_cards, green_cards) = get_cards(max_card=5)
-            print((red_cards + blue_cards + green_cards)[0:1] + [8, 6])
-            choose_attack_cards((red_cards + blue_cards + green_cards)[0:1] + [8, 6])
+            color_card8 = pyautogui.screenshot().getpixel(POS_ATTACK_CARDS[8])
+            print(color_card8)
+            if color_card8[2] > 190:
+                print([8, 7, 6])
+                choose_attack_cards([8, 7, 6])
+            else:
+                (red_cards, blue_cards, green_cards) = get_cards(max_card=5)
+                print((red_cards + blue_cards + green_cards)[0:1] + [7, 6])
+                choose_attack_cards((red_cards + blue_cards + green_cards)[0:1] + [7, 6])
         else:
             auto_attack_one_turn(max_card=5, max_red=max_red, max_blue=max_blue, max_green=max_green)
         if battle_end():
@@ -493,6 +507,41 @@ def QP_40ap():
     battle_begin()
     auto_battle_with_buffer(max_turns=12, max_red=3, max_blue=3, max_green=3)
 
+def GUDAGUDA_Honnoji_40ap(max_turns=12, max_red=3, max_blue=3, max_green=3):
+    battle_begin()
+    for i in range(1, max_turns + 1):
+        print("turn:", i)
+        if i == 1:
+            # 孔明技能1需要依照实际情况调整目标，默认2
+            servant_skill(3, 1, 2)  # Kong Ming: +NP
+            servant_skill(3, 2)  # Kong Ming: +ALL NP+Def
+            servant_skill(3, 3)  # Kong Ming: +ALL NP+ATK
+            auto_attack_one_turn(max_card=5, max_red=max_red, max_blue=max_blue, max_green=max_green)
+        elif i == 9:
+            choose_enemy(2)
+            servant_skill(1, 1)  #
+            servant_skill(1, 3)  #
+            servant_skill(2, 1)  #
+            servant_skill(2, 3)  #
+            master_skill(1, 0)  # +ALL ATK
+            click_around(POS_ATTACK_BUTTON)
+            sleep_around(3)
+            color_card8 = pyautogui.screenshot().getpixel(POS_ATTACK_CARDS[8])
+            print(color_card8)
+            if color_card8[2] > 190:
+                print([8, 6, 7])
+                choose_attack_cards([8, 6, 7])
+            else:
+                (red_cards, blue_cards, green_cards) = get_cards(max_card=5)
+                print((red_cards + blue_cards + green_cards)[0:1] + [6, 7])
+                choose_attack_cards((red_cards + blue_cards + green_cards)[0:1] + [6, 7])
+        else:
+            auto_attack_one_turn(max_card=5, max_red=max_red, max_blue=max_blue, max_green=max_green)
+        if battle_end():
+            print("battle_end, exit.")
+            break
+    pass
+
 
 # Main Program
 # Switch to FGO window
@@ -504,14 +553,20 @@ print(time.strftime("%Y-%m-%d %H:%M:%S\n", time.localtime()))
 # check the default value of FGO window
 win_fgo = pyautogui.getWindow('ApowerMirror Main')
 X = win_fgo.get_position()[0] - X_DEFAULT
+print("X=",X)
+X = -70
+print("X=",X)
 Y = win_fgo.get_position()[1] - Y_DEFAULT
+print("Y=",Y)
 
 # 友情点召唤
 # friend_point_summon(cards_qty=100)
 
 # 每日任务
-daily_40ap()
+# daily_40ap()
 # QP_40ap()
+
+GUDAGUDA_Honnoji_40ap()
 
 # Already DONE.
 
