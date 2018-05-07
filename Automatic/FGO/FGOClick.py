@@ -74,6 +74,20 @@ def same_color(position, color):
         return False
 
 
+def card_color(card):
+    color_card = pyautogui.screenshot().getpixel(POS_ATTACK_CARDS[card])
+    # print('The card', card, 'color is', color_card)
+    if color_card[0] > 100:
+        # print('RED')
+        return ('RED')
+    elif color_card[1] > 100:
+        # print('GREEN')
+        return ('GREEN')
+    else:
+        # print('BLUE')
+        return ('BLUE')
+
+
 def click_around(postion):
     # 避免每次精确点击同一像素
     pos_div = random.randint(-POS_RANGE, POS_RANGE)
@@ -213,16 +227,16 @@ def get_cards(max_card=5):
     red_cards = []
     blue_cards = []
     green_cards = []
-    im = pyautogui.screenshot()
     for card in range(1, max_card + 1):
         # pyautogui.moveTo(POS_ATTACK_CARDS[card])
         # sleep_around(1)
-        if im.getpixel(POS_ATTACK_CARDS[card])[1] > 85:
-            green_cards.append(card)
-        elif im.getpixel(POS_ATTACK_CARDS[card])[1] > 45:
-            blue_cards.append(card)
-        else:
+        #  这里可以考虑改进，因为如果是绿、蓝卡，card_color会被调用两次。
+        if card_color(card) == 'RED':
             red_cards.append(card)
+        elif card_color(card) == 'GREEN':
+            green_cards.append(card)
+        else:
+            blue_cards.append(card)
     return (red_cards, blue_cards, green_cards)
 
 
@@ -338,44 +352,6 @@ def friend_point_summon(cards_qty=10):
     return ()
 
 
-def nero_fest_autumn_expert_first_turn():
-    battle_begin()
-    choose_enemy(1)
-    servant_skill(3, 1, 1)
-    servant_skill(3, 2, 0)
-    servant_skill(3, 3, 0)
-    return ()
-
-
-def nero_fest_autumn_expert_last_turn(target=1):
-    choose_enemy(3)
-    master_skill(3, 3)  # Kong Ming CD -2
-    servant_skill(1, 2)  # Lancelot +Critical Star Drop
-    servant_skill(1, 3)  # Lancelot +Critical
-    servant_skill(2, 2)  # Jeanne Alter: +ATK
-    servant_skill(2, 3)  # Jeanne Alter: +Critical ATK
-    servant_skill(3, 2)  # Kong Ming: +NP+Def
-    servant_skill(3, 3)  # Kong Ming: +NP+ATK
-    # 孔明技能1需要依照实际情况调整目标，默认兰斯洛特
-    servant_skill(3, 1, target)
-    # 默认按照孔明、贞德Alter、兰斯洛特依次使用宝具卡
-    fix_attack_one_turn((8, 7, 6))
-    battle_end()
-    return ()
-
-
-def common_last_turn(target=1):
-    servant_skill(1, 1)  # Artila +ALL NP ATK
-    servant_skill(1, 3)  # Artila +Critical
-    servant_skill(2, 1)  # Jeanne Alter: +ATK
-    servant_skill(2, 2)  # Jeanne Alter: +ALL ATK
-    servant_skill(2, 3)  # Jeanne Alter: +Critical ATK
-    # 默认按照孔明、贞德Alter、阿蒂拉依次使用宝具卡
-    fix_attack_one_turn((8, 7, 6))
-    battle_end()
-    return ()
-
-
 def auto_battle(max_turns=3, max_red=3, max_blue=3, max_green=3):
     for i in range(0, max_turns):
         print("turn:", i + 1)
@@ -403,7 +379,7 @@ def auto_battle_with_buffer(max_turns=9, max_red=3, max_blue=3, max_green=3):
             auto_attack_one_turn(max_card=5, max_red=max_red, max_blue=max_blue, max_green=max_green)
         elif i == 8:
             servant_skill(1, 1)  # Jeanne Alter: +ATK
-            servant_skill(1, 2,1)  # Jeanne Alter: +ALL ATK
+            servant_skill(1, 2, 1)  # Jeanne Alter: +ALL ATK
             servant_skill(1, 3)  # Jeanne Alter: +Critical ATK
             # servant_skill(2, 1)  # Artila +ALL NP ATK
             servant_skill(2, 2)  # Artila +ATK
@@ -415,9 +391,7 @@ def auto_battle_with_buffer(max_turns=9, max_red=3, max_blue=3, max_green=3):
             master_skill(1, 0)  # +ALL ATK
             click_around(POS_ATTACK_BUTTON)
             sleep_around(3)
-            color_card8 = pyautogui.screenshot().getpixel(POS_ATTACK_CARDS[8])
-            print(color_card8)
-            if color_card8[2] > 190:
+            if card_color(8) == 'BLUE':
                 print([8, 7, 6])
                 choose_attack_cards([8, 7, 6])
             else:
@@ -432,109 +406,55 @@ def auto_battle_with_buffer(max_turns=9, max_red=3, max_blue=3, max_green=3):
     return ()
 
 
-def christmas_2016_10ap():
-    battle_begin()
-    auto_battle(max_turns=12, max_red=3, max_blue=4, max_green=4)
-    return ()
-
-
-def christmas_2016_20ap():
-    battle_begin()
-    auto_battle(max_turns=5, max_red=3, max_blue=3, max_green=4)
-    return ()
-
-
-def christmas_2017_10ap():
-    battle_begin()
-    auto_battle(max_turns=4, max_red=3, max_blue=4, max_green=4)
-    return ()
-
-
-def christmas_2017_30ap():
-    battle_begin()
-    auto_battle(max_turns=5, max_red=3, max_blue=3, max_green=3)
-    return ()
-
-
-def chapter_last_barbatos():
-    battle_begin()
-    # 默认采用贞德Alter、孔明、坂田金时组队
-    servant_skill(1, 1)  # Jeanne Alter: +ATK
-    servant_skill(1, 2)  # Jeanne Alter: +ALL ATK
-    servant_skill(1, 3)  # Jeanne Alter: +Critical ATK
-    servant_skill(2, 2)  # Kong Ming: +ALL NP+Def
-    servant_skill(2, 3)  # Kong Ming: +ALL NP+ATK
-    # 孔明技能1需要依照实际情况调整目标，默认坂田金时
-    servant_skill(3, 1, 3)  # Kong Ming: +NP
-    # 默认按照红卡、贞德Alter宝具、坂田金时宝具的顺序
-    master_skill(2, 3)  # +ATK to Kintaroo
-    master_skill(3, 3)  # +Def to Kintaroo
-
-    click_around(POS_ATTACK_BUTTON)
-    sleep_around(3)
-    red_cards = []
-    blue_cards = []
-    green_cards = []
-    for card in range(1, 6):
-        im = pyautogui.screenshot()
-        # pyautogui.moveTo(POS_ATTACK_CARDS[card])
-        # sleep_around(1)
-        if im.getpixel(POS_ATTACK_CARDS[card])[1] > 85:
-            green_cards.append(card)
-        elif im.getpixel(POS_ATTACK_CARDS[card])[1] > 45:
-            blue_cards.append(card)
-        else:
-            red_cards.append(card)
-    if len(red_cards) >= 1:
-        choose_attack_cards((red_cards[0:1], 6, 8))
-    elif len(blue_cards) >= 1:
-        choose_attack_cards((blue_cards[0:1], 6, 8))
-    elif len(green_cards) >= 1:
-        choose_attack_cards((green_cards[0:1], 6, 8))
-    while not (battle_end()):
-        auto_battle(max_turns=4, max_red=3, max_blue=4, max_green=4)
-    return ()
-
-
 def daily_40ap():
     # Jeanne, Artila, Kong Ming
     battle_begin()
     auto_battle_with_buffer(max_turns=12, max_red=3, max_blue=3, max_green=3)
     return ()
 
+
 def QP_40ap():
     # Jeanne, Artila, Rider
     battle_begin()
     auto_battle_with_buffer(max_turns=12, max_red=3, max_blue=3, max_green=3)
+
 
 def GUDAGUDA_Honnoji_40ap(max_turns=12, max_red=3, max_blue=3, max_green=3):
     battle_begin()
     for i in range(1, max_turns + 1):
         print("turn:", i)
         if i == 1:
+            servant_skill(1, 1)  #
             # 孔明技能1需要依照实际情况调整目标，默认2
-            servant_skill(3, 1, 2)  # Kong Ming: +NP
-            servant_skill(3, 2)  # Kong Ming: +ALL NP+Def
-            servant_skill(3, 3)  # Kong Ming: +ALL NP+ATK
+            # servant_skill(3, 1, 2)  # Kong Ming: +NP
+            # servant_skill(3, 2)  # Kong Ming: +ALL NP+Def
+            # servant_skill(3, 3)  # Kong Ming: +ALL NP+ATK
             auto_attack_one_turn(max_card=5, max_red=max_red, max_blue=max_blue, max_green=max_green)
         elif i == 9:
             choose_enemy(2)
             servant_skill(1, 1)  #
+            servant_skill(1, 2)  #
             servant_skill(1, 3)  #
             servant_skill(2, 1)  #
-            servant_skill(2, 3)  #
+            servant_skill(2, 2)  #
+            # servant_skill(2, 3)  #
+            # servant_skill(3, 1)  #
+            # servant_skill(3, 2)  #
+            # servant_skill(3, 3)  #
             master_skill(1, 0)  # +ALL ATK
             click_around(POS_ATTACK_BUTTON)
             sleep_around(3)
-            color_card8 = pyautogui.screenshot().getpixel(POS_ATTACK_CARDS[8])
-            print(color_card8)
-            if color_card8[2] > 190:
-                print([8, 6, 7])
+            if card_color(7) == 'RED' and card_color(8) == "GREEN":
+                # print([8, 6, 7])
                 choose_attack_cards([8, 6, 7])
+            elif card_color(8) == 'GREEN':
+                (red_cards, blue_cards, green_cards) = get_cards(max_card=5)
+                # print((red_cards + blue_cards + green_cards)[0:1] + [8, 6])
+                choose_attack_cards((red_cards + blue_cards + green_cards)[0:1] + [8, 6])
             else:
                 (red_cards, blue_cards, green_cards) = get_cards(max_card=5)
-                print((red_cards + blue_cards + green_cards)[0:1] + [6, 7])
-                choose_attack_cards((red_cards + blue_cards + green_cards)[0:1] + [6, 7])
+                # print((red_cards + blue_cards + green_cards)[0:2] + [6])
+                choose_attack_cards((red_cards + blue_cards + green_cards)[0:2] + [6])
         else:
             auto_attack_one_turn(max_card=5, max_red=max_red, max_blue=max_blue, max_green=max_green)
         if battle_end():
@@ -553,11 +473,11 @@ print(time.strftime("%Y-%m-%d %H:%M:%S\n", time.localtime()))
 # check the default value of FGO window
 win_fgo = pyautogui.getWindow('ApowerMirror Main')
 X = win_fgo.get_position()[0] - X_DEFAULT
-print("X=",X)
+print("X=", X)
 X = -70
-print("X=",X)
+print("X=", X)
 Y = win_fgo.get_position()[1] - Y_DEFAULT
-print("Y=",Y)
+print("Y=", Y)
 
 # 友情点召唤
 # friend_point_summon(cards_qty=100)
@@ -570,30 +490,13 @@ GUDAGUDA_Honnoji_40ap()
 
 # Already DONE.
 
-# 通用无脑进攻
-# auto_battle(max_turns=12, max_red=3, max_blue=3, max_green=4)
-# 通用最后一回合，
-# common_last_turn()
-# 魔神柱任务
-# chapter_last_barbatos()
-
 # 圣诞节活动
 # 圣诞节无限池抽奖，每池400礼物
 # unlimited_lineup(gifts_qty=100)
-# 圣诞2017
-# christmas_2017_10ap()
-# 圣诞2016复刻
-# christmas_2016_10ap()
-# christmas_2016_20ap()
 
 # 尼禄祭活动
 # 尼禄祭无限池抽奖，每池300礼物
 # unlimited_lineup(gifts_qty=300)
-# 尼禄祭花瓣池第一回合
-# nero_fest_autumn_expert_first_turn()
-# 尼禄祭花瓣池最后一回合
-# 孔明技能1需要依照实际情况调整目标
-# nero_fest_autumn_expert_last_turn(target=1)
 
 # Switch back to Python window, so user could know the program is finished.
 pyautogui.hotkey('alt', 'tab')
