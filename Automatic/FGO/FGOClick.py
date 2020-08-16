@@ -20,13 +20,13 @@ width, height = pyautogui.size()
 # Default position and color of ApowerMirror FGO window
 X_DEFAULT = 240
 Y_DEFAULT = 154
-X = -70
+X = 0
 Y = 0
 # Define Random Range for small div
 POS_RANGE = 5
 TIME_RANGE = 1
 # Position of Enemy
-POS_ENEMY = ((), (X + 420, Y + 250), (X + 750, Y + 250), (X + 1100, Y + 250))
+POS_ENEMY = ((), (X + 420, Y + 250), (X + 750, Y + 250), (X + 1100, Y + 250), (X + 420, Y + 450), (X + 750, Y + 450), (X + 1100, Y + 450))
 # Position of Buffers button
 POS_SERVANT_SKILLS = ((),
                       ((), (X + 450, Y + 1030), (X + 590, Y + 1030), (X + 720, Y + 1030)),
@@ -53,7 +53,7 @@ COLOR_ATTACK_BUTTON = (0, 234, 247)
 # Red Attack  Cards: (153, 25, 24), (152, 24, 22), (154, 24, 23)
 # Blue Attack  Cards: (22, 64, 147), (21, 64, 148), (21, 65, 151), (22, 66, 150), (23, 65, 151), (22, 63, 153)
 # Green Attack Cards: (30, 110, 12)
-COLOR_BATTLE_BEGIN_BUTTON = (191, 197, 198)
+COLOR_BATTLE_BEGIN_BUTTON = (188, 196, 194)
 COLOR_BATTLE_END_ASCEND = (0, 1, 0)
 COLOR_BATTLE_END = (8, 5, 3)
 COLOR_UNLIMITED_LINEUP_BUTTON = (21, 202, 243)
@@ -130,7 +130,7 @@ def unlimited_lineup(gifts_qty=300):
     return ()
 
 
-def auto_unlimited_lineup(gifts_qty=300):
+def auto_reset_unlimited_lineup(gifts_qty=300):
     # 无限池抽奖，自动重置
     # 通过检查重置按钮颜色，判断是否需要重置。
     # 但无法考虑额外的10%点击次数
@@ -150,15 +150,31 @@ def auto_unlimited_lineup(gifts_qty=300):
     return ()
 
 
-def buffer_confirm(target=0):
-    # confirm buffer
-    # the confirm is already disable in game menu
-    # click_around(POS_BUFFER_CONFIRM)
-    # choose target servant
-    if target != 0:
-        click_around(POS_BUFFER_TARGETS[target])
-    # waiting for result
-    sleep_around(3)
+def friend_point_summon(cards_qty=10):
+    # 友情点召唤
+    try:
+        cards_round = int(cards_qty / 10)
+        # 每次点击大约10秒钟左右 (4 +2 + 4 * pyautogui.PAUSE)
+        # 每次sleep_around大约要增加1秒，+2
+        print("Need around", int(round(cards_round * (4 + TIME_RANGE + 4 * pyautogui.PAUSE) / 60, 60)), "Minutes.")
+        for i in range(cards_round, 0, -1):
+            # click summon button
+            click_around(POS_SUMMON_END_BUTTON)
+            # select summon 10 cards
+            click_around(POS_SUMMON_TEN_BUTTON)
+            # confirm summon
+            click_around(POS_SUMMON_TEN_BUTTON)
+            # waiting for result
+            sleep_around(3)
+            # click to finish summon
+            click_around(POS_SUMMON_END_BUTTON)
+            sleep_around(1)
+            print(i, time.strftime("%H:%M:%S", time.localtime()))
+        print('Done.')
+        # Log end time
+        print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
+    except KeyboardInterrupt:
+        print('User Break.')
     return ()
 
 
@@ -169,6 +185,18 @@ def choose_enemy(target=3):
             click_around(POS_ENEMY[target])
     except KeyboardInterrupt:
         print('User Break.')
+    return ()
+
+
+def buffer_confirm(target=0):
+    # confirm buffer
+    # the confirm is already disable in game menu
+    # click_around(POS_BUFFER_CONFIRM)
+    # choose target servant
+    if target != 0:
+        click_around(POS_BUFFER_TARGETS[target])
+    # waiting for result
+    sleep_around(3)
     return ()
 
 
@@ -324,34 +352,6 @@ def battle_end():
         return False
 
 
-def friend_point_summon(cards_qty=10):
-    # 友情点召唤
-    try:
-        cards_round = int(cards_qty / 10)
-        # 每次点击大约10秒钟左右 (4 +2 + 4 * pyautogui.PAUSE)
-        # 每次sleep_around大约要增加1秒，+2
-        print("Need around", int(round(cards_round * (4 + TIME_RANGE + 4 * pyautogui.PAUSE) / 60, 60)), "Minutes.")
-        for i in range(cards_round, 0, -1):
-            # click summon button
-            click_around(POS_SUMMON_END_BUTTON)
-            # select summon 10 cards
-            click_around(POS_SUMMON_TEN_BUTTON)
-            # confirm summon
-            click_around(POS_SUMMON_TEN_BUTTON)
-            # waiting for result
-            sleep_around(3)
-            # click to finish summon
-            click_around(POS_SUMMON_END_BUTTON)
-            sleep_around(1)
-            print(i, time.strftime("%H:%M:%S", time.localtime()))
-        print('Done.')
-        # Log end time
-        print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
-    except KeyboardInterrupt:
-        print('User Break.')
-    return ()
-
-
 def auto_battle(max_turns=3, max_red=3, max_blue=3, max_green=3):
     for i in range(0, max_turns):
         print("turn:", i + 1)
@@ -413,50 +413,143 @@ def daily_40ap():
     return ()
 
 
-def QP_40ap():
-    # Jeanne, Artila, Rider
-    battle_begin()
-    auto_battle_with_buffer(max_turns=12, max_red=3, max_blue=3, max_green=3)
-
-
-def GUDAGUDA_Honnoji_40ap(max_turns=12, max_red=3, max_blue=3, max_green=3):
+def QP_40ap(max_turns=12, max_red=3, max_blue=3, max_green=3):
+    # Raber, Artila, Rider
     battle_begin()
     for i in range(1, max_turns + 1):
         print("turn:", i)
         if i == 1:
-            servant_skill(1, 1)  #
-            # 孔明技能1需要依照实际情况调整目标，默认2
-            # servant_skill(3, 1, 2)  # Kong Ming: +NP
-            # servant_skill(3, 2)  # Kong Ming: +ALL NP+Def
-            # servant_skill(3, 3)  # Kong Ming: +ALL NP+ATK
+            servant_skill(2, 2)  #
+            servant_skill(3, 1)  # Rider: +NP
+            servant_skill(3, 2)  # Rider: +Star
+            servant_skill(3, 3)  # Rider:
             auto_attack_one_turn(max_card=5, max_red=max_red, max_blue=max_blue, max_green=max_green)
-        elif i == 9:
-            choose_enemy(2)
-            servant_skill(1, 1)  #
+        elif i == 7:
             servant_skill(1, 2)  #
             servant_skill(1, 3)  #
             servant_skill(2, 1)  #
             servant_skill(2, 2)  #
-            # servant_skill(2, 3)  #
-            # servant_skill(3, 1)  #
-            # servant_skill(3, 2)  #
-            # servant_skill(3, 3)  #
+            servant_skill(2, 3)  #
+            servant_skill(3, 1)  #
+            servant_skill(3, 2)  #
+            servant_skill(3, 3)  #
             master_skill(1, 0)  # +ALL ATK
             click_around(POS_ATTACK_BUTTON)
             sleep_around(3)
-            if card_color(7) == 'RED' and card_color(8) == "GREEN":
-                # print([8, 6, 7])
-                choose_attack_cards([8, 6, 7])
-            elif card_color(8) == 'GREEN':
+            if card_color(6) == 'RED' and card_color(7) == 'RED':
+                choose_attack_cards([6, 7, 8])
+            elif card_color(7) == 'RED':
                 (red_cards, blue_cards, green_cards) = get_cards(max_card=5)
-                # print((red_cards + blue_cards + green_cards)[0:1] + [8, 6])
-                choose_attack_cards((red_cards + blue_cards + green_cards)[0:1] + [8, 6])
+                choose_attack_cards((red_cards + blue_cards + green_cards)[0:1] + [7, 8])
             else:
                 (red_cards, blue_cards, green_cards) = get_cards(max_card=5)
-                # print((red_cards + blue_cards + green_cards)[0:2] + [6])
-                choose_attack_cards((red_cards + blue_cards + green_cards)[0:2] + [6])
+                choose_attack_cards((red_cards + blue_cards + green_cards)[0:2] + [8])
         else:
             auto_attack_one_turn(max_card=5, max_red=max_red, max_blue=max_blue, max_green=max_green)
+        if battle_end():
+            print("battle_end, exit.")
+            break
+    pass
+
+
+def activity_40ap(max_turns=12, max_red=3, max_blue=3, max_green=3):  # for hunting 3
+    battle_begin()
+    sleep_around(15)
+    for i in range(1, max_turns + 1):
+        print("turn:", i)
+        if i == 1:
+            #  Raber, Kong Ming, Caption
+            # Kong Ming Skill 1需要依照实际情况调整目标，默认2
+            servant_skill(2, 1, 1)  # Kong Ming: +NP to Raber
+            servant_skill(2, 2)  # Kong Ming: +ALL NP+Def
+            servant_skill(2, 3)  # Kong Ming: +ALL NP+ATK
+            servant_skill(3, 3)  # Caption +NP
+            auto_attack_one_turn(max_card=5, max_red=max_red, max_blue=max_blue, max_green=max_green)
+        # elif i == 7:
+        #     servant_skill(1, 1, 2)  # Raber +HP to Kong Ming
+        #     servant_skill(2, 1, 1)  # Kong Ming: +NP to Raber
+        #     servant_skill(2, 2)  # Kong Ming: +ALL NP+Def
+        #     servant_skill(2, 3)  # Kong Ming: +ALL NP+ATK
+        #     servant_skill(3, 3)  # Caption +NP
+        #     auto_attack_one_turn(max_card=5, max_red=max_red, max_blue=max_blue, max_green=max_green)
+        elif i == 7:
+            choose_enemy(2)
+            servant_skill(1, 1, 2)  # Raber +HP to Kong Ming
+            servant_skill(1, 3)  # Raber + ATK
+            servant_skill(2, 1, 1)  # Kong Ming: +NP to Raber
+            servant_skill(2, 2)  # Kong Ming: +ALL NP+Def
+            servant_skill(2, 3)  # Kong Ming: +ALL NP+ATK
+            servant_skill(3, 1)  # Caption: +ALL ATK
+            servant_skill(3, 3)  # Caption +NP
+            master_skill(1, 0)  # +ALL ATK
+            click_around(POS_ATTACK_BUTTON)
+            sleep_around(3)
+            (red_cards, blue_cards, green_cards) = get_cards(max_card=5)
+            if card_color(8) == "BLUE":
+                choose_attack_cards([7, 8, 6])
+            # elif card_color(8) == 'GREEN':
+            #     (red_cards, blue_cards, green_cards) = get_cards(max_card=5)
+            #     choose_attack_cards((red_cards + blue_cards + green_cards)[0:1] + [8, 6])
+            else:
+                choose_attack_cards((red_cards + blue_cards + green_cards)[0:1] + [8, 6])
+        else:
+            choose_enemy(2)
+            auto_attack_one_turn(max_card=5, max_red=max_red, max_blue=max_blue, max_green=max_green)
+        if battle_end():
+            print("battle_end, exit.")
+            break
+    pass
+
+
+def rashomon_2bp(max_turns=20, helper='Merlin'):  # for rashomon 2bp
+    #  Default Jeanne, Kong Ming, Merlin
+    battle_begin()
+    for i in range(1, max_turns + 1):
+        print("turn:", i)
+        if i <= 4:
+            if i == 4:
+                if helper == 'Merlin':
+                    servant_skill(3, 2)  # Merlin: +ALL DEF
+                else:
+                    servant_skill(2, 2)  # Merlin: +ALL DEF
+            else:
+                pass
+            click_around(POS_ATTACK_BUTTON)
+            sleep_around(3)
+            (red_cards, blue_cards, green_cards) = get_cards(max_card=5)
+            choose_attack_cards((blue_cards + green_cards + red_cards)[0:3])
+        elif i == 5:
+            choose_enemy(4)
+            servant_skill(1, 1)  # Jeanne +Stat
+            servant_skill(1, 2)  # Jeanne +ATK
+            servant_skill(1, 3)  # Jeanne + ATK + DEF
+            if helper == 'Merlin':
+                servant_skill(2, 1, 1)  # Kong Ming: +NP to Jeanne
+                servant_skill(2, 2)  # Kong Ming: +ALL NP+Def
+                servant_skill(2, 3)  # Kong Ming: +ALL NP+ATK
+                servant_skill(3, 1)  # Merlin: +ALL ATK
+                servant_skill(3, 3, 1)  # Merlin +ATK to Jeanne
+            else:
+                servant_skill(3, 1, 1)  # Kong Ming: +NP to Jeanne
+                servant_skill(3, 2)  # Kong Ming: +ALL NP+Def
+                servant_skill(3, 3)  # Kong Ming: +ALL NP+ATK
+                servant_skill(2, 1)  # Merlin: +ALL ATK
+                servant_skill(2, 3, 1)  # Merlin +ATK to Jeanne
+            master_skill(1, 0)  # +ALL ATK
+            click_around(POS_ATTACK_BUTTON)
+            sleep_around(3)
+            (red_cards, blue_cards, green_cards) = get_cards(max_card=5)
+            choose_attack_cards([6] + (red_cards + blue_cards + green_cards)[0:3])
+        else:
+            choose_enemy(6)
+            click_around(POS_ATTACK_BUTTON)
+            sleep_around(3)
+            (red_cards, blue_cards, green_cards) = get_cards(max_card=5)
+            if card_color(6) == "RED":
+                choose_attack_cards([6] + (red_cards + blue_cards + green_cards)[0:2])
+            else:
+                choose_attack_cards((red_cards + blue_cards + green_cards)[0:3])
+
         if battle_end():
             print("battle_end, exit.")
             break
@@ -474,9 +567,11 @@ print(time.strftime("%Y-%m-%d %H:%M:%S\n", time.localtime()))
 win_fgo = pyautogui.getWindow('ApowerMirror Main')
 X = win_fgo.get_position()[0] - X_DEFAULT
 print("X=", X)
-X = -70
-print("X=", X)
 Y = win_fgo.get_position()[1] - Y_DEFAULT
+print("Y=", Y)
+X = 0
+print("X=", X)
+Y = 0
 print("Y=", Y)
 
 # 友情点召唤
@@ -484,9 +579,10 @@ print("Y=", Y)
 
 # 每日任务
 # daily_40ap()
-# QP_40ap()
+QP_40ap()
 
-GUDAGUDA_Honnoji_40ap()
+# activity_40ap()
+# rashomon_2bp(max_turns=20, helper='Kong') # use Merlin as helper
 
 # Already DONE.
 

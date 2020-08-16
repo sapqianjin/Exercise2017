@@ -1,29 +1,29 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Dorian Wang 2017.09.13
-# lesson: get all detail information from several excel file
+# lesson: get all detail_list information from several excel file
 
 import os
 import openpyxl
 import win32com.client
 
-detail = []
+detail_list = []
 
 #  loop all file, save xls to xlsx and remove old file
 print('==========Check xls file==========')
 for folder_name, subfolders, filenames in os.walk('./Excel/'):
     for filename in filenames:
-        report = os.path.join(os.getcwd() + '\\Excel\\' + filename)
-        # print(report)
-        if report[-3:] == 'xls':
+        full_filename = os.path.join(os.getcwd() + '\\Excel\\' + filename)
+        # print(full_filename)
+        if full_filename[-3:] == 'xls':
             excel = win32com.client.gencache.EnsureDispatch('Excel.Application')  # 要看MIME手册
-            wb = excel.Workbooks.Open(report)
-            wb.SaveAs(report + 'x', FileFormat=51)
+            wb = excel.Workbooks.Open(full_filename)
+            wb.SaveAs(full_filename + 'x', FileFormat=51)
             wb.Close()
             excel.Application.Quit()
-            os.remove(report)
+            os.remove(full_filename)
 
-#  loop all excel file, get detail data
+#  loop all excel file, get detail_list data
 print('==========Begin Read Data==========')
 for folder_name, subfolders, filenames in os.walk('./Excel/'):
     for filename in filenames:
@@ -32,10 +32,9 @@ for folder_name, subfolders, filenames in os.walk('./Excel/'):
         sheet_names = workbook.get_sheet_names()
         # print(sheet_names)
         for sheetname in sheet_names:
-            print(sheetname)
+            # print(sheetname)
             worksheet = workbook.get_sheet_by_name(sheetname)
-            # print(worksheet.sheet_state)
-            if worksheet.sheet_state == 'visible':
+            if worksheet.sheet_state == 'visible':  # we don't read the hidden sheet.
                 sheet_end = False
                 build_no = worksheet['B2'].value
                 build_level = worksheet['D2'].value
@@ -73,37 +72,37 @@ for folder_name, subfolders, filenames in os.walk('./Excel/'):
                     else:
                         room_price = round(float(price_data) / 10000, 2)
 
-                    value_data = worksheet['E' + str(line)].value
-                    # print(value_data)
-                    if value_data == None:
+                    amount_data = worksheet['E' + str(line)].value
+                    # print(amount_data)
+                    if amount_data == None:
                         break
-                    elif str(value_data)[-1:] == '元':
-                        room_value = int(float(str(value_data)[0:-1]) / 10000)
+                    elif str(amount_data)[-1:] == '元':
+                        room_amount = int(float(str(amount_data)[0:-1]) / 10000)
                     else:
-                        room_value = int(float(value_data) / 10000)
+                        room_amount = int(float(amount_data) / 10000)
 
-                    detail.append({'filename': filename, 'sheetname': sheetname, 'build_no': build_no, 'build_level': build_level, 'serial_num': serial_num, 'room_num': room_num, 'room_size': room_size, 'room_price': room_price,
-                                   'room_value': room_value})
+                    detail_list.append({'filename': filename, 'sheetname': sheetname, 'build_no': build_no, 'build_level': build_level, 'serial_num': serial_num, 'room_num': room_num, 'room_size': room_size, 'room_price': room_price,
+                                   'room_amount': room_amount})
 
-for line in detail:
+for line in detail_list:
     # print(line)
-    print(line['filename'], line['sheetname'], line['build_no'], line['build_level'], line['serial_num'], line['room_num'], line['room_size'], line['room_price'], line['room_value'])
+    print(line['filename'], line['sheetname'], line['build_no'], line['build_level'], line['serial_num'], line['room_num'], line['room_size'], line['room_price'], line['room_amount'])
 
-#  save detail data into new sum excel file
+#  save detail_list data into new sum excel file
 print('==========Write Data to Sum Excel==========')
 sum_workbook = openpyxl.Workbook()
 sum_sheet = sum_workbook.active
 sum_sheet['A1'] = '来源文件'
 sum_sheet['B1'] = 'Sheet页'
 sum_sheet['C1'] = '楼幢号'
-sum_sheet['D1'] = '楼高'
+sum_sheet['D1'] = '楼高（层）'
 sum_sheet['E1'] = '序号'
 sum_sheet['F1'] = '房号'
 sum_sheet['G1'] = '面积'
 sum_sheet['H1'] = '单价（万）'
 sum_sheet['I1'] = '总价（万）'
 i = 1
-for line in detail:
+for line in detail_list:
     i = i + 1
     sum_sheet['A' + str(i)] = line['filename']
     sum_sheet['B' + str(i)] = line['sheetname']
@@ -113,6 +112,8 @@ for line in detail:
     sum_sheet['F' + str(i)] = line['room_num']
     sum_sheet['G' + str(i)] = line['room_size']
     sum_sheet['H' + str(i)] = line['room_price']
-    sum_sheet['I' + str(i)] = line['room_value']
+    sum_sheet['I' + str(i)] = line['room_amount']
 
 sum_workbook.save('西安房价汇总2018.xlsx')
+
+print('==========Done.==========')

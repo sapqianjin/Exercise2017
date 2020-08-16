@@ -6,6 +6,7 @@
 import time
 import pyautogui
 import win32com, win32api, win32con, win32gui
+import ctypes
 import win32com.client
 
 # # win32com SendKeys
@@ -40,37 +41,40 @@ import win32com.client
 
 
 # test for win32api, active exist program, send mouse move and click
-def clickLeft (x, y):
-    win32api.SetCursorPos((x,y)) # 将鼠标移动到x,y 的位置
-    win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN,x,y,0,0) # 驱动鼠标左击按下
+def clickLeft(x, y):
+    # The win32api.SetCursorPos((x, y))  cannot be execute in Android, so change it to:
+    # ctypes.windll.user32.SetCursorPos(x, y), it's could be execute without error, but still not work.
+    # win32api.SetCursorPos((x, y))  # 将鼠标移动到x,y 的位置
+    ctypes.windll.user32.SetCursorPos(x, y)
+    # win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, x, y, 0, 0)  # 驱动鼠标左击按下
+    ctypes.windll.user32.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, x, y, 0, 0)  # 驱动鼠标左击按下
     time.sleep(1)  # in term of seconds
-    win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP,x,y,0,0) # 驱动鼠标左击提起，点击完成
+    # win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, x, y, 0, 0)  # 驱动鼠标左击提起，点击完成
+    ctypes.windll.user32.mouse_event(win32con.MOUSEEVENTF_LEFTUP, x, y, 0, 0)  # 驱动鼠标左击提起，点击完成
     time.sleep(1)
 
-def clickRight (x, y):
-    win32api.SetCursorPos((x, y))  # 将鼠标移动到x,y 的位置
+
+def clickRight(x, y):
+    ctypes.windll.user32.SetCursorPos(x, y)
     win32api.mouse_event(win32con.MOUSEEVENTF_RIGHTDOWN, x, y, 0, 0)
     time.sleep(1)  # in term of seconds
     win32api.mouse_event(win32con.MOUSEEVENTF_RIGHTUP, x, y, 0, 0)
     time.sleep(1)
 
+
 shell = win32com.client.Dispatch('WScript.Shell')
-shell.AppActivate('Untitled - Notepad')
-# shell.SendKeys('{ClickLeft, 100, 100}',0)
-# shell.SendKeys('{Move, 500, 800}',0)
-# shell.SendKeys('{ClickLeft, 1500, 800}',0)
-# shell.SendKeys('{ClickLeft, 1500, 800}',0)
 flags, hcursor, (x,y) = win32gui.GetCursorInfo() # x, y 就是当前鼠标的位置
 print(x,y)
-clickLeft(1391,650)
-clickRight(1391,650)
-# OK
 
-# shell.AppActivate('FGO_Bilibili')
-# shell.SendKeys('{ClickLeft, 100, 100}',0)
-# shell.SendKeys('{Move, 500, 800}',0)
-# shell.SendKeys('{ClickLeft, 1500, 800}',0)
-# shell.SendKeys('{ClickLeft, 1500, 800}',0)
+# shell.AppActivate('Untitled - Notepad')
+# clickLeft(414,156)
+# clickRight(414,156)
+# # OK
+
+shell.AppActivate('FGO_BiliBili')
+clickLeft(414,156)
+clickRight(414,156)
+# Doesn't work in Android Simulator.
 
 
 
